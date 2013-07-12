@@ -2,7 +2,6 @@ module Fastpermt where
 
 import Fastpermt.Stat
 import Fastpermt.Util
-import Fastpermt.Cluster
 import Fastpermt.Methods
 import Data.List
 import System.Random (mkStdGen, randoms)
@@ -20,27 +19,23 @@ main = do
   a <- mapM readStc condAfnames
   b <- mapM readStc condBfnames
 
-  -- -- load cortex triangulation graph
-  -- graph <- readGraph "data/graph"
-
   -- select permutation method
   let method = case meth of
         "maxt" -> MaxThreshold
         m -> error ("Unknown permutation method: " ++ show m)
 
   -- meat of the algo
-  let g = mkStdGen 5582031
+  let g = mkStdGen 5582031 -- pre-generated random seed, to ensure stable results
       pm = grouped (length a) $ take (length a * nperm) (randoms g :: [Bool])
-      op as bs = apply method (zipWith ttest (transpose as) (transpose bs))
+      op as bs = apply method (vectorTTest as bs)
       distribution = applyPermutation op pm (map stc_data a) (map stc_data b)
       thresh = sort distribution !! (floor $ fromIntegral (length distribution) * (0.95::Double))
 
-      origSpm = zipWith ttest (transpose $ map stc_data a) (transpose $ map stc_data b)
+      origSpm = vectorTTest (map stc_data a) (map stc_data b)
       outStc = (head a) { stc_data = threshold method thresh origSpm }
 
   BS.hPut stdout (writeStc outStc)
 
-  --     cutoff = (>(2.1314::Double)) -- p = 0.05
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
 applyPermutation _ [] _ _ = []

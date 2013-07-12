@@ -8,6 +8,7 @@ module Fastpermt.Util ( readGraph
 
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Map as M
+import qualified Data.Vector.Unboxed as V
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.Put
@@ -19,7 +20,7 @@ data Stc = Stc { tmin :: Float
                , n_vertices :: Int
                , n_times :: Int
                , source_vector :: [Word32]
-               , stc_data :: [Float]
+               , stc_data :: V.Vector Float
                } deriving (Show)
 
 readStc :: FilePath -> IO Stc
@@ -35,7 +36,7 @@ instance Binary Stc where
     nVertices <- getInt32be
     sourceVector <- replicateM nVertices get -- I wouldn't be unpacking this, I am too lazy
     nTimes <- getInt32be
-    values <- replicateM (nVertices * nTimes) getFloat32be
+    values <- V.replicateM (nVertices * nTimes) getFloat32be
     return $ Stc tMin tStep nVertices nTimes sourceVector values
   put (Stc tMin tStep nVertices nTimes sourceVector values) = do
     putFloat32be tMin
@@ -43,7 +44,7 @@ instance Binary Stc where
     putInt32be nVertices
     mapM_ put sourceVector
     putInt32be nTimes
-    mapM_ putFloat32be values
+    V.mapM_ putFloat32be values
 
 -- helpers for 32bit big-endian io
 getInt32be :: Get Int
