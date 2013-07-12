@@ -3,3 +3,4 @@ aux/
 fastpermt
 *.o
 *.hi
+*.prof
