@@ -1,8 +1,9 @@
-module Fastpermt.Util ( readDoubles
-                      , writeDoubles
-                      , readGraph
+module Fastpermt.Util ( readGraph
                       , Graph
                       , grouped
+                      , Stc(..)
+                      , readStc
+                      , writeStc
                       ) where
 
 import qualified Data.ByteString.Lazy as BS
@@ -13,17 +14,46 @@ import Data.Binary.Put
 import Unsafe.Coerce
 import Control.Monad
 
-readDoubles :: Int -> FilePath -> IO [Double]
-readDoubles n f = liftM (runGet $ getDoubles n) (BS.readFile f)
+data Stc = Stc { tmin :: Float
+               , tstep :: Float
+               , n_vertices :: Int
+               , n_times :: Int
+               , source_vector :: [Word32]
+               , stc_data :: [Float]
+               } deriving (Show)
 
-getDoubles :: Int -> Get [Double]
-{-# INLINE getDoubles #-}
-getDoubles = go []
- where
-   go xs 0 = return $! reverse xs
-   go xs i = do
-     x <- fmap unsafeCoerce getWord64le
-     x `seq` go (x:xs) (i-1)
+readStc :: FilePath -> IO Stc
+readStc f = liftM decode (BS.readFile f)
+
+writeStc :: Stc -> BS.ByteString
+writeStc stc = encode stc
+
+instance Binary Stc where
+  get = do
+    tMin <- getFloat32be
+    tStep <- getFloat32be
+    nVertices <- getInt32be
+    sourceVector <- replicateM nVertices get -- I wouldn't be unpacking this, I am too lazy
+    nTimes <- getInt32be
+    values <- replicateM (nVertices * nTimes) getFloat32be
+    return $ Stc tMin tStep nVertices nTimes sourceVector values
+  put (Stc tMin tStep nVertices nTimes sourceVector values) = do
+    putFloat32be tMin
+    putFloat32be tStep
+    putInt32be nVertices
+    mapM_ put sourceVector
+    putInt32be nTimes
+    mapM_ putFloat32be values
+
+-- helpers for 32bit big-endian io
+getInt32be :: Get Int
+getInt32be = fmap unsafeCoerce getWord32be
+getFloat32be :: Get Float
+getFloat32be = fmap unsafeCoerce getWord32be
+putInt32be :: Int -> Put
+putInt32be i = putWord32be (unsafeCoerce i)
+putFloat32be :: Float -> Put
+putFloat32be f = putWord32be (unsafeCoerce f)
 
 type Graph = M.Map Int [Int]
 
@@ -44,7 +74,4 @@ getGraph = do
 
 grouped :: Int -> [a] -> [[a]]
 grouped _ [] = []
-grouped i xs = take i xs : grouped i (drop i xs)
-
-writeDoubles :: FilePath -> [Double] -> IO ()
-writeDoubles f xs = BS.writeFile f (runPut $ mapM_ (putWord64be . unsafeCoerce) xs)
+grouped n xs = take n xs : grouped n (drop n xs)
