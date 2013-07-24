@@ -4,16 +4,20 @@ module Fastpermt.Util ( readGraph
                       , Stc(..)
                       , readStc
                       , writeStc
+                      , grlookup
+                      , pDebug
                       ) where
 
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Map as M
 import qualified Data.Vector.Unboxed as V
+import Data.Maybe
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.Put
 import Unsafe.Coerce
 import Control.Monad
+import Debug.Trace
 
 data Stc = Stc { tmin :: Float
                , tstep :: Float
@@ -73,6 +77,12 @@ getGraph = do
       rest <- getGraph
       return $ M.insert i vs rest
 
+grlookup :: Graph -> Int -> [Int]
+grlookup graph i = fromMaybe [] (M.lookup i graph)
+
 grouped :: Int -> [a] -> [[a]]
 grouped _ [] = []
 grouped n xs = take n xs : grouped n (drop n xs)
+
+pDebug :: (Show b) => String -> (a -> b) -> a -> a
+pDebug msg str a = trace (msg ++ (show $ str a)) a

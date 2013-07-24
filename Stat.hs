@@ -1,4 +1,4 @@
-module Fastpermt.Stat (ttest, vectorTTest) where
+module Fastpermt.Stat (vectorTTest) where
 
 import qualified Data.Vector.Unboxed as V
 
