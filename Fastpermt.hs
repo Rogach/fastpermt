@@ -83,7 +83,7 @@ main = do
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
 applyPermutation _ [] _ _ = []
 applyPermutation op pm as bs = let (asp, bsp) = permute (as, bs) (head pm)
-                               in op asp bsp : applyPermutation op (tail pm) asp bsp
+                               in op asp bsp : applyPermutation op (tail pm) as bs
 
 permute :: ([a],[a]) -> [Bool] -> ([a],[a])
 permute (as, bs) ps = permute' as bs ps [] []
