@@ -47,7 +47,7 @@ getClustersConf = GetClusters { gcThinClusters = False &= explicit &= name "thin
                               , gcGraphFile = "" &= typFile &= explicit &= name "graph-file" &=
                                               help "graph file for cluster algorithms"
                               , gcStc = "" &= typ "STC" &= argPos 0
-                              }
+                              } &= name "clusters"
 
 confModes :: Config
 confModes =
