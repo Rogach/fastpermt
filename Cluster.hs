@@ -27,10 +27,10 @@ clusters graph test larr = clusters' larr S.empty 0
 
 clusterThinning :: (Floating f, V.Unbox f) => Graph -> (f -> Bool) -> V.Vector f -> V.Vector f
 clusterThinning graph test larr =
-  let thin i v = if test v && all test (map (larr V.!) (grlookup graph i))
-                 then v
-                 else 0
-      thick i v = if test v || any test (map (larr V.!) (grlookup graph i))
-                  then larr V.! i
-                  else 0
-  in V.imap thick $ V.imap thin larr
+  let shrink arr = V.imap (\i v ->
+                            if test v && all test (map (arr V.!) (grlookup graph i))
+                            then v else 0) arr
+      expand arr = V.imap (\i v ->
+                            if test v || any test (map (arr V.!) (grlookup graph i))
+                            then larr V.! i else 0) arr
+  in expand $ shrink larr

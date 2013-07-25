@@ -5,6 +5,7 @@ import Fastpermt.Stat
 import Fastpermt.Util
 import Fastpermt.Methods
 import Fastpermt.Config
+import Fastpermt.Cluster
 import Data.List
 import Data.Maybe
 import System.Random (mkStdGen, randoms)
@@ -12,18 +13,33 @@ import System.IO (stdout, stderr, hPutStrLn)
 import System.Console.CmdArgs
 import Text.Printf
 import qualified Data.ByteString.Lazy as BS
+import qualified Data.Vector.Unboxed as V
 
 main :: IO ()
 main = do
   config <- cmdArgs confModes
   case config of
     TestRun -> print "test"
+    conf@GetClusters{} -> do
+      stc <- readStc $ gcStc conf
+      mesh <- readGraph $ gcGraphFile conf
+      let nt = fromMaybe (n_times stc) (gcNTimesOpt conf)
+          nv = fromMaybe (n_vertices stc) (gcNVertsOpt conf)
+          cc = ClusterConf { thresh = 0
+                           , graph = mesh
+                           , nVerts = nv
+                           , nTimes = nt
+                           }
+          thin = if gcThinClusters conf
+                 then clusterThinning mesh (>(thresh cc))
+                 else id
+          gc = clusters mesh (>(thresh cc))
+      forM_ (zip [(1::Int)..] (onVertices cc (gc . thin . V.map abs) (stc_data stc))) $ \(t, cs) -> do
+          hPutStrLn stderr $ printf "t = %3d: %s" t (intercalate "," $ map (show . length) cs)
     conf@Conf{} -> do
-      let [condAfnames,condBfnames] = transpose $ grouped 2 (stcs conf)
-
       -- load stc files for both conditions
-      a <- mapM readStc condAfnames
-      b <- mapM readStc condBfnames
+      [a, b] <- fmap (transpose . grouped 2) $ mapM readStc (stcs conf)
+
       let nt = fromMaybe (n_times $ head a) (nTimesOpt conf)
           nv = fromMaybe (n_vertices $ head a) (nVertsOpt conf)
 
@@ -38,8 +54,8 @@ main = do
                                , nTimes = nt
                                }
           return $ if not (thinClusters conf)
-                   then AnyMethod (modAbs $ MaxClusterSize cc)
-                   else AnyMethod (modAbs $ modClusterThinning cc $ MaxClusterSize cc)
+                   then AnyMethod $ modAbs $ MaxClusterSize cc
+                   else AnyMethod $ modAbs $ modClusterThinning cc $ MaxClusterSize cc
         m -> error ("Unknown permutation method: " ++ show m)
 
       -- meat of the algo
@@ -53,7 +69,7 @@ main = do
           outStc = (head a) { stc_data = corrSpm }
 
       forM_ (zip distribution pm) $ \(v, r) -> do
-        hPutStrLn stderr (printf "%7.2f (%s)" v (map (\f -> if f then '-' else '/') r))
+        hPutStrLn stderr $ printf "%7.2f (%s)" v (map (\f -> if f then '-' else '/') r)
 
       hPutStrLn stderr ("thresh: " ++ show cutoff)
       hPutStrLn stderr ("orig: " ++ show (apply meth (vectorTTest (map stc_data a) (map stc_data b))))

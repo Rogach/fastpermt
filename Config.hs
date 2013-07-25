@@ -14,6 +14,12 @@ data Config = TestRun
                   , nVertsOpt :: Maybe Int
                   , nTimesOpt :: Maybe Int
                   }
+            | GetClusters { gcThinClusters :: Bool
+                          , gcNVertsOpt :: Maybe Int
+                          , gcNTimesOpt :: Maybe Int
+                          , gcGraphFile :: FilePath
+                          , gcStc :: FilePath
+                          }
             deriving (Show, Data, Typeable)
 
 testRunConf :: Config
@@ -28,14 +34,24 @@ defConf = Conf { method = "maxt" &= typ "NAME" &= help "permutation statistic to
                , graphFile = "" &= typFile &= explicit &= name "graph-file" &=
                              help "graph file for cluster algorithms"
                , thinClusters = False &= explicit &= name "thin-clusters" &=
-                                help "apply cluster thinning"
+                                help "apply cluster thinning?"
                , nVertsOpt = Nothing &= explicit &= name "nverts"
                , nTimesOpt = Nothing &= explicit &= name "ntimes"
                } &= name "run"
 
+getClustersConf :: Config
+getClustersConf = GetClusters { gcThinClusters = False &= explicit &= name "thin-clusters" &=
+                                                 help "apply cluster thinning?"
+                              , gcNVertsOpt = Nothing &= explicit &= name "nverts"
+                              , gcNTimesOpt = Nothing &= explicit &= name "ntimes"
+                              , gcGraphFile = "" &= typFile &= explicit &= name "graph-file" &=
+                                              help "graph file for cluster algorithms"
+                              , gcStc = "" &= typ "STC" &= argPos 0
+                              }
+
 confModes :: Config
 confModes =
-  modes [defConf, testRunConf] &=
+  modes [defConf, testRunConf, getClustersConf] &=
   program "fastpermt" &=
   summary "" &=
   versionArg [ignore]

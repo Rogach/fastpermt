@@ -5,6 +5,7 @@ module Fastpermt.Methods ( Method(..)
                          , AnyMethod(..)
                          , modAbs
                          , modClusterThinning
+                         , onVertices
                          ) where
 
 import qualified Data.Vector.Unboxed as V
