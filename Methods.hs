@@ -9,44 +9,47 @@ module Fastpermt.Methods ( Method(..)
 
 import qualified Data.Vector.Unboxed as V
 import Fastpermt.Cluster
-import Fastpermt.Util
+import Fastpermt.Util ()
+import Fastpermt.Config
 
 class Method a where
   apply :: a -> V.Vector Float -> Float
   threshold :: a -> Float -> V.Vector Float -> V.Vector Float
 
+data ModifiedMethod m = ModifiedMethod (V.Vector Float -> V.Vector Float) m
+instance Method m => Method (ModifiedMethod m) where
+  apply (ModifiedMethod modify meth) = apply meth . modify
+  threshold (ModifiedMethod modify meth) th = threshold meth th . modify
+
 data AnyMethod = forall m. Method m => AnyMethod m
 instance Method AnyMethod where
-  apply (AnyMethod m) values = apply m values
-  threshold (AnyMethod m) th values = threshold m th values
+  apply (AnyMethod m) = apply m
+  threshold (AnyMethod m) = threshold m
+
 
 data MaxThreshold = MaxThreshold deriving (Eq, Show)
 instance Method MaxThreshold where
-  apply _ values = V.maximum $ V.map abs $ values
-  threshold _ th values = V.map (\v -> if (abs v > th) then abs v else 0) values
+  apply _ = V.maximum
+  threshold _ th = V.map (\v -> if v > th then v else 0)
 
-data MaxClusterSize = MaxClusterSize { grph :: Graph, times :: Int, vertices :: Int, cutoff :: Float } deriving (Eq, Show)
+onVertices :: ClusterConf -> (V.Vector Float -> a) -> V.Vector Float -> [a]
+onVertices conf op vals =
+  map (\t -> op $ V.slice (t*(nVerts conf)) (nVerts conf) vals) [0..(nTimes conf)-1]
+
+data MaxClusterSize = MaxClusterSize ClusterConf deriving (Show)
 instance Method MaxClusterSize where
-  apply (MaxClusterSize { grph, times, vertices, cutoff }) values =
-    let cs = concat $ map (\t -> clusters grph (>cutoff) (V.slice (t*vertices) vertices values)) [0..times-1]
+  apply (MaxClusterSize conf) values =
+    let cs = concat $ onVertices conf (clusters (graph conf) (>(thresh conf))) values
     in if null cs
        then 0
        else fromIntegral $ maximum $ map length cs
-  threshold (MaxClusterSize { grph, times, vertices, cutoff }) th values =
-    pDebug "tcc" V.sum $ V.concat $ map (\t -> let piece = V.slice (t*vertices) vertices values
-                                                   cs = clusters grph (>cutoff) piece
-                                                   fcs = filter ((>= th) . fromIntegral . length) cs
-                                               in applyClusters piece fcs) [0..times-1]
-
-data ModifiedMethod m = ModifiedMethod (V.Vector Float -> V.Vector Float) m
-instance Method m => Method (ModifiedMethod m) where
-  apply (ModifiedMethod modify meth) values = apply meth (modify values)
-  threshold (ModifiedMethod modify meth) th values = threshold meth th (modify values)
+  threshold (MaxClusterSize conf) th values =
+    let fcs = filter ((>= th) . fromIntegral . length) . clusters (graph conf) (>(thresh conf))
+    in V.concat $ onVertices conf (\piece -> applyClusters piece (fcs piece)) values
 
 modAbs :: Method m => m -> ModifiedMethod m
-modAbs meth = ModifiedMethod (V.map abs) meth
+modAbs = ModifiedMethod (V.map abs)
 
-modClusterThinning :: Method m => Graph -> Float -> Int -> Int -> m -> ModifiedMethod m
-modClusterThinning graph cutoff times vertices meth =
-  let cth values t = V.slice (t*vertices) vertices values
-  in ModifiedMethod (\values -> V.concat $ map (clusterThinning graph (>cutoff) . cth values) [0..times-1]) meth
+modClusterThinning :: Method m => ClusterConf -> m -> ModifiedMethod m
+modClusterThinning conf =
+  ModifiedMethod (V.concat . onVertices conf (clusterThinning (graph conf) (>(thresh conf))))

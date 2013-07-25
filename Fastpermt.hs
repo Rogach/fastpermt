@@ -1,64 +1,62 @@
-module Fastpermt where
+module Fastpermt (main) where
 
-import Control.Monad
 import Fastpermt.Stat
 import Fastpermt.Util
 import Fastpermt.Methods
-import Fastpermt.Cluster
+import Fastpermt.Config
 import Data.List
+import Data.Maybe
 import System.Random (mkStdGen, randoms)
-import System.Environment (getArgs)
 import System.IO (stdout, stderr, hPutStrLn)
+import System.Console.CmdArgs
 import qualified Data.ByteString.Lazy as BS
-import qualified Data.Vector.Unboxed as V
 
 main :: IO ()
 main = do
-  (meth:sCount:fnames) <- getArgs
-  let nperm = read sCount :: Int
-      [condAfnames,condBfnames] = transpose $ grouped 2 fnames
+  config <- cmdArgs confModes
+  case config of
+    TestRun -> print "test"
+    conf@Conf{} -> do
+      let [condAfnames,condBfnames] = transpose $ grouped 2 (stcs conf)
 
-  -- load stc files for both conditions
-  a <- mapM readStc condAfnames
-  b <- mapM readStc condBfnames
-  let nTimes = n_times $ head a
-      nVert = n_vertices $ head a
-  hPutStrLn stderr ("nTimes = " ++ show nTimes)
-  hPutStrLn stderr ("nTimes = " ++ show nVert)
+      -- load stc files for both conditions
+      a <- mapM readStc condAfnames
+      b <- mapM readStc condBfnames
+      let nt = fromMaybe (n_times $ head a) (nTimesOpt conf)
+          nv = fromMaybe (n_vertices $ head a) (nVertsOpt conf)
+      hPutStrLn stderr ("nTimes = " ++ show nt)
+      hPutStrLn stderr ("nVerts = " ++ show nv)
 
-  -- read graph
-  graph <- readGraph "aux/graph"
-
-  -- select permutation method
-  let method = case meth of
-        "maxt" -> AnyMethod (MaxThreshold)
-        "maxclust05" -> AnyMethod (modAbs $ MaxClusterSize graph nTimes nVert 2.1314)
-        "maxclust05thin" -> AnyMethod (modAbs $ modClusterThinning graph 2.1314 nTimes nVert $ MaxClusterSize graph nTimes nVert 2.1314)
+      -- select permutation method
+      meth <- case (method conf) of
+        "maxt" -> return $ AnyMethod (modAbs $ MaxThreshold)
+        "maxclust" -> do
+          mesh <- readGraph (graphFile conf)
+          let cc = ClusterConf { thresh = (clusterThreshold conf)
+                               , graph = mesh
+                               , nVerts = nv
+                               , nTimes = nt
+                               }
+          return $ if not (thinClusters conf)
+                   then AnyMethod (modAbs $ MaxClusterSize cc)
+                   else AnyMethod (modAbs $ modClusterThinning cc $ MaxClusterSize cc)
         m -> error ("Unknown permutation method: " ++ show m)
 
-  -- meat of the algo
-  let g = mkStdGen 5582031 -- pre-generated random seed, to ensure stable results
-      pm = grouped (length a) $ take (length a * nperm) (randoms g :: [Bool])
-      op as bs = apply method (vectorTTest as bs)
-      distribution = applyPermutation op pm (map stc_data a) (map stc_data b)
-      thresh = sort distribution !! (floor $ fromIntegral (length distribution) * (0.95::Double))
+      -- meat of the algo
+      let g = mkStdGen 5582031 -- pre-generated random seed, to ensure stable results
+          pm = grouped (length a) $ take (length a * (count conf)) (randoms g :: [Bool])
+          op as bs = apply meth (vectorTTest as bs)
+          distribution = applyPermutation op pm (map stc_data a) (map stc_data b)
+          cutoff = sort distribution !! (floor $ fromIntegral (length distribution) * (0.95::Double))
+          origSpm = vectorTTest (map stc_data a) (map stc_data b)
+          corrSpm = threshold meth cutoff origSpm
+          outStc = (head a) { stc_data = corrSpm }
 
-      origSpm = vectorTTest (map stc_data a) (map stc_data b)
-      corrSpm = threshold method thresh origSpm
-      outStc = (head a) { stc_data = corrSpm }
+      hPutStrLn stderr ("distribution: " ++ show distribution)
+      hPutStrLn stderr ("thresh: " ++ show cutoff)
+      hPutStrLn stderr ("orig: " ++ show (apply meth (vectorTTest (map stc_data a) (map stc_data b))))
 
-  hPutStrLn stderr "orig"
-  forM_ [0..nTimes-1] $ \t ->
-    hPutStrLn stderr $ show $ filter (>100) $ map length $ clusters graph (>2.1314) $ V.slice (t*nVert) nVert $ (V.map abs origSpm)
-  hPutStrLn stderr "corr"
-  forM_ [0..nTimes-1] $ \t ->
-    hPutStrLn stderr $ show $ map length $ clusters graph (>2.1314) $ V.slice (t*nVert) nVert $ (V.map abs corrSpm)
-
-
-  hPutStrLn stderr (show distribution)
-  hPutStrLn stderr (show thresh)
-
-  BS.hPut stdout (writeStc outStc)
+      BS.hPut stdout (writeStc outStc)
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
 applyPermutation _ [] _ _ = []
