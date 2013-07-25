@@ -5,6 +5,7 @@ module Fastpermt.Methods ( Method(..)
                          , MaxClusterMass(..)
                          , AnyMethod(..)
                          , modAbs
+                         , modFiltNaN
                          , modClusterThinning
                          , onVertices
                          ) where
@@ -65,6 +66,9 @@ instance Method MaxClusterMass where
 
 modAbs :: Method m => m -> ModifiedMethod m
 modAbs = ModifiedMethod (V.map abs)
+
+modFiltNaN :: Method m => m -> ModifiedMethod m
+modFiltNaN = ModifiedMethod (V.map (\v -> if v /= v then 0 else v))
 
 modClusterThinning :: Method m => ClusterConf -> m -> ModifiedMethod m
 modClusterThinning conf =
