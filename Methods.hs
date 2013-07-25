@@ -10,10 +10,10 @@ module Fastpermt.Methods ( Method(..)
                          , onVertices
                          ) where
 
-import qualified Data.Vector.Unboxed as V
 import Fastpermt.Cluster
-import Fastpermt.Util ()
 import Fastpermt.Config
+import Fastpermt.Util (onVertices)
+import qualified Data.Vector.Unboxed as V
 
 class Method a where
   apply :: a -> V.Vector Float -> Float
@@ -34,10 +34,6 @@ data MaxThreshold = MaxThreshold deriving (Eq, Show)
 instance Method MaxThreshold where
   apply _ = V.maximum
   threshold _ th = V.map (\v -> if v > th then v else 0)
-
-onVertices :: ClusterConf -> (V.Vector Float -> a) -> V.Vector Float -> [a]
-onVertices conf op vals =
-  map (\t -> op $ V.slice (t*(nVerts conf)) (nVerts conf) vals) [0..(nTimes conf)-1]
 
 data MaxClusterSize = MaxClusterSize ClusterConf deriving (Show)
 instance Method MaxClusterSize where

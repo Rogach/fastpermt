@@ -1,8 +1,8 @@
 module Fastpermt.Cluster where
 
-import Fastpermt.Util
-import qualified Data.Vector.Unboxed as V
+import Fastpermt.Graph
 import qualified Data.Set as S
+import qualified Data.Vector.Unboxed as V
 
 applyClusters :: (Show f, Floating f, V.Unbox f) => V.Vector f -> [[Int]] -> V.Vector f
 applyClusters arr = applyClusters' (V.replicate (V.length arr) 0)

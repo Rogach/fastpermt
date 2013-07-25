@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Fastpermt.Config (confModes, Config(..), ClusterConf(..)) where
 
+import Fastpermt.Graph
 import System.Console.CmdArgs
-import Fastpermt.Util
 
 data Config = TestRun
             | Conf { method :: String

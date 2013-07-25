@@ -1,16 +1,18 @@
 module Fastpermt (main) where
 
 import Control.Monad
-import Fastpermt.Stat
-import Fastpermt.Util
-import Fastpermt.Methods
-import Fastpermt.Config
-import Fastpermt.Cluster
 import Data.List
 import Data.Maybe
-import System.Random (mkStdGen, randoms)
-import System.IO (stdout, stderr, hPutStrLn)
+import Fastpermt.Cluster
+import Fastpermt.Config
+import Fastpermt.Graph
+import Fastpermt.Methods
+import Fastpermt.Stat
+import Fastpermt.Stc
+import Fastpermt.Util
 import System.Console.CmdArgs
+import System.IO (stdout, stderr, hPutStrLn)
+import System.Random (mkStdGen, randoms)
 import Text.Printf
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Vector.Unboxed as V
