@@ -46,16 +46,19 @@ main = do
       -- select permutation method
       meth <- case (method conf) of
         "maxt" -> return $ AnyMethod (modAbs $ MaxThreshold)
-        "maxclust" -> do
+        m | m `elem` ["maxclust", "maxmass"] -> do
           mesh <- readGraph (graphFile conf)
           let cc = ClusterConf { thresh = (clusterThreshold conf)
                                , graph = mesh
                                , nVerts = nv
                                , nTimes = nt
                                }
-          return $ if not (thinClusters conf)
-                   then AnyMethod $ modAbs $ MaxClusterSize cc
-                   else AnyMethod $ modAbs $ modClusterThinning cc $ MaxClusterSize cc
+          return $ case m of
+            "maxclust" | not (thinClusters conf) -> AnyMethod $ modAbs $ MaxClusterSize cc
+            "maxclust" -> AnyMethod $ modAbs $ modClusterThinning cc $ MaxClusterSize cc
+            "maxmass" | not (thinClusters conf) -> AnyMethod $ modAbs $ MaxClusterMass cc
+            "maxmass" -> AnyMethod $ modAbs $ modClusterThinning cc $ MaxClusterMass cc
+            _ -> error ("Unknown permutation method: " ++ show m)
         m -> error ("Unknown permutation method: " ++ show m)
 
       -- meat of the algo

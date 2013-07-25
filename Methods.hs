@@ -2,6 +2,7 @@
 module Fastpermt.Methods ( Method(..)
                          , MaxThreshold(..)
                          , MaxClusterSize(..)
+                         , MaxClusterMass(..)
                          , AnyMethod(..)
                          , modAbs
                          , modClusterThinning
@@ -47,6 +48,20 @@ instance Method MaxClusterSize where
   threshold (MaxClusterSize conf) th values =
     let fcs = filter ((>= th) . fromIntegral . length) . clusters (graph conf) (>(thresh conf))
     in V.concat $ onVertices conf (\piece -> applyClusters piece (fcs piece)) values
+
+data MaxClusterMass = MaxClusterMass ClusterConf deriving (Show)
+instance Method MaxClusterMass where
+  apply (MaxClusterMass conf) =
+    maximum . concat . onVertices conf (
+      \piece ->
+      map (sum . map (\c -> piece V.! c)) $
+      clusters (graph conf) (>(thresh conf)) piece
+    )
+  threshold (MaxClusterMass conf) th =
+    let fcs piece =
+          filter ((>= th) . sum . map (\c -> piece V.! c)) $
+          clusters (graph conf) (>(thresh conf)) piece
+    in V.concat . onVertices conf (\piece -> applyClusters piece (fcs piece))
 
 modAbs :: Method m => m -> ModifiedMethod m
 modAbs = ModifiedMethod (V.map abs)
