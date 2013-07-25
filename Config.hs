@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Fastpermt.Config (confModes, Config(..), ClusterConf(..)) where
+module Fastpermt.Config (confModes, Config(..), ClusterConf(..), emptyCC) where
 
 import Fastpermt.Graph
 import System.Console.CmdArgs
@@ -11,16 +11,13 @@ data Config = TestRun
                   , clusterThreshold :: Float
                   , graphFile :: FilePath
                   , thinClusters :: Bool
-                  , nVertsOpt :: Maybe Int
-                  , nTimesOpt :: Maybe Int
+                  , ignoreLabelFile :: Maybe FilePath
                   }
             | GetClusters { gcMinClusterSize :: Int
                           , gcClusterThreshold :: Float
                           , gcThinClusters :: Bool
                           , gcGraphFile :: FilePath
                           , gcStc :: FilePath
-                          , gcNVertsOpt :: Maybe Int
-                          , gcNTimesOpt :: Maybe Int
                           }
             deriving (Show, Data, Typeable)
 
@@ -37,8 +34,8 @@ defConf = Conf { method = "maxt" &= typ "NAME" &= help "permutation statistic to
                              help "graph file for cluster algorithms"
                , thinClusters = False &= explicit &= name "thin-clusters" &=
                                 help "apply cluster thinning?"
-               , nVertsOpt = Nothing &= explicit &= name "nverts"
-               , nTimesOpt = Nothing &= explicit &= name "ntimes"
+               , ignoreLabelFile = Nothing &= explicit &= name "ignore-label" &=
+                                   help "mne label file with vertices to ignore"
                } &= name "run"
 
 getClustersConf :: Config
@@ -51,8 +48,6 @@ getClustersConf = GetClusters { gcMinClusterSize = 0 &= explicit &= name "min-cl
                               , gcGraphFile = "" &= typFile &= explicit &= name "graph-file" &=
                                               help "graph file for cluster algorithms"
                               , gcStc = "" &= typ "STC" &= argPos 0
-                              , gcNVertsOpt = Nothing &= explicit &= name "nverts"
-                              , gcNTimesOpt = Nothing &= explicit &= name "ntimes"
                               } &= name "clusters"
 
 confModes :: Config
@@ -67,3 +62,6 @@ data ClusterConf = ClusterConf { thresh :: Float
                                , nVerts :: Int
                                , nTimes :: Int
                                } deriving Show
+
+emptyCC :: ClusterConf
+emptyCC = ClusterConf 0 emptyGraph 0 0

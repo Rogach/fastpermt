@@ -2,10 +2,10 @@ module Fastpermt (main) where
 
 import Control.Monad
 import Data.List
-import Data.Maybe
 import Fastpermt.Cluster
 import Fastpermt.Config
 import Fastpermt.Graph
+import Fastpermt.Labels
 import Fastpermt.Methods
 import Fastpermt.Stat
 import Fastpermt.Stc
@@ -25,12 +25,10 @@ main = do
     conf@GetClusters{} -> do
       stc <- readStc $ gcStc conf
       mesh <- readGraph $ gcGraphFile conf
-      let nt = fromMaybe (n_times stc) (gcNTimesOpt conf)
-          nv = fromMaybe (n_vertices stc) (gcNVertsOpt conf)
-          cc = ClusterConf { thresh = (gcClusterThreshold conf)
+      let cc = ClusterConf { thresh = (gcClusterThreshold conf)
                            , graph = mesh
-                           , nVerts = nv
-                           , nTimes = nt
+                           , nVerts = n_vertices stc
+                           , nTimes = n_times stc
                            }
           thin = if gcThinClusters conf
                  then clusterThinning mesh (>(thresh cc))
@@ -40,11 +38,9 @@ main = do
         when (length cs > 0) $
           hPutStrLn stderr $ printf "t = %3d: %s" t (intercalate "," $ map (show . length) cs)
     conf@Conf{} -> do
+      reject <- maybe (return id) (fmap applyIgnoreLabel . readLabel) (ignoreLabelFile conf)
       -- load stc files for both conditions
-      [a, b] <- fmap (transpose . grouped 2) $ mapM readStc (stcs conf)
-
-      let nt = fromMaybe (n_times $ head a) (nTimesOpt conf)
-          nv = fromMaybe (n_vertices $ head a) (nVertsOpt conf)
+      [a, b] <- fmap (transpose . grouped 2) $ mapM (fmap reject . readStc) (stcs conf)
 
       -- select permutation method
       meth <- case (method conf) of
@@ -53,8 +49,8 @@ main = do
           mesh <- readGraph (graphFile conf)
           let cc = ClusterConf { thresh = (clusterThreshold conf)
                                , graph = mesh
-                               , nVerts = nv
-                               , nTimes = nt
+                               , nVerts = n_vertices $ head a
+                               , nTimes = n_times $ head a
                                }
           return $ case m of
             "maxclust" | not (thinClusters conf) -> AnyMethod $ modFiltNaN $ modAbs $ MaxClusterSize cc

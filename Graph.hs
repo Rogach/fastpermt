@@ -1,4 +1,4 @@
-module Fastpermt.Graph(Graph, readGraph, getGraph, grlookup) where
+module Fastpermt.Graph(Graph, readGraph, getGraph, grlookup, emptyGraph) where
 
 import Control.Monad
 import Data.Binary
@@ -26,3 +26,6 @@ getGraph = do
 
 grlookup :: Graph -> Int -> [Int]
 grlookup graph i = fromMaybe [] (M.lookup i graph)
+
+emptyGraph :: M.Map Int [Int]
+emptyGraph = M.empty
