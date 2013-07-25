@@ -35,6 +35,7 @@ main = do
                  else id
           gc = clusters mesh (>(thresh cc))
       forM_ (zip [(1::Int)..] (onVertices cc (gc . thin . V.map abs) (stc_data stc))) $ \(t, cs) -> do
+        when (length cs > 0) $
           hPutStrLn stderr $ printf "t = %3d: %s" t (intercalate "," $ map (show . length) cs)
     conf@Conf{} -> do
       -- load stc files for both conditions
