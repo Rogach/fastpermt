@@ -23,7 +23,8 @@ main = do
   case config of
     TestRun -> print "test"
     conf@GetClusters{} -> do
-      stc <- readStc $ gcStc conf
+      reject <- maybe (return id) (fmap applyIgnoreLabel . readLabel) (gcIgnoreLabelFile conf)
+      stc <- fmap reject $ readStc $ gcStc conf
       mesh <- readGraph $ gcGraphFile conf
       let cc = ClusterConf { thresh = (gcClusterThreshold conf)
                            , graph = mesh

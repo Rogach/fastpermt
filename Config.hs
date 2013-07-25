@@ -18,6 +18,7 @@ data Config =
                 , gcClusterThreshold :: Float
                 , gcNoThinClusters :: Bool
                 , gcGraphFile :: FilePath
+                , gcIgnoreLabelFile :: Maybe FilePath
                 , gcStc :: FilePath
                 }
   deriving (Show, Data, Typeable)
@@ -36,7 +37,7 @@ defConf =
                      help "graph file for cluster algorithms"
        , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
                           help "supress cluster thinning?"
-       , ignoreLabelFile = Nothing &= explicit &= name "ignore-label" &=
+       , ignoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=
                            help "mne label file with vertices to ignore"
        } &= name "run"
 
@@ -46,10 +47,12 @@ getClustersConf =
                                    help "don't output clusters smaller than this"
               , gcClusterThreshold = 0 &= explicit &= name "cluster-threshold" &= name "t" &=
                                      help "voxel value cut-off threshold"
-              , gcNoThinClusters = False &= explicit &= name "thin-clusters" &=
+              , gcNoThinClusters = False &= explicit &= name "no-thin-clusters" &=
                                    help "suppress cluster thinning?"
               , gcGraphFile = "" &= typFile &= explicit &= name "graph-file" &= name "g" &=
                               help "graph file for cluster algorithms"
+              , gcIgnoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=
+                                    help "mne label file with vertices to ignore"
               , gcStc = "" &= typ "STC" &= argPos 0
               } &= name "clusters"
 
