@@ -30,7 +30,7 @@ main = do
                            , nVerts = n_vertices stc
                            , nTimes = n_times stc
                            }
-          thin = if gcThinClusters conf
+          thin = if not (gcNoThinClusters conf)
                  then clusterThinning mesh (>(thresh cc))
                  else id
           gc = filter ((> (gcMinClusterSize conf)) . length) . clusters mesh (>(thresh cc))
@@ -53,9 +53,9 @@ main = do
                                , nTimes = n_times $ head a
                                }
           return $ case m of
-            "maxclust" | not (thinClusters conf) -> AnyMethod $ modFiltNaN $ modAbs $ MaxClusterSize cc
+            "maxclust" | noThinClusters conf -> AnyMethod $ modFiltNaN $ modAbs $ MaxClusterSize cc
             "maxclust" -> AnyMethod $ modFiltNaN $ modAbs $ modClusterThinning cc $ MaxClusterSize cc
-            "maxmass" | not (thinClusters conf) -> AnyMethod $ modFiltNaN $ modAbs $ MaxClusterMass cc
+            "maxmass" | noThinClusters conf -> AnyMethod $ modFiltNaN $ modAbs $ MaxClusterMass cc
             "maxmass" -> AnyMethod $ modFiltNaN $ modAbs $ modClusterThinning cc $ MaxClusterMass cc
             _ -> error ("Unknown permutation method: " ++ show m)
         m -> error ("Unknown permutation method: " ++ show m)
