@@ -13,6 +13,7 @@ data Config = Conf { method :: String
                    , ignoreLabelFile :: Maybe FilePath
                    }
             | GetClusters { gcMinClusterSize :: Int
+                          , shortFormat :: Bool
                           , clusterThreshold :: Float
                           , noThinClusters :: Bool
                           , graphFile :: Maybe FilePath
@@ -40,6 +41,8 @@ getClustersConf :: Config
 getClustersConf =
   GetClusters { gcMinClusterSize = 0 &= explicit &= name "min-cluster-size" &= name "m" &=
                                    help "don't output clusters smaller than this"
+              , shortFormat = False &= explicit &= name "short" &= name "s" &=
+                              help "only output space-separated times for clusters"
               , clusterThreshold = 0 &= explicit &= name "cluster-threshold" &= name "t" &=
                                    help "voxel value cut-off threshold"
               , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
