@@ -20,26 +20,24 @@ import qualified Data.Vector.Unboxed as V
 main :: IO ()
 main = do
   config <- cmdArgs confModes
+  reject <- maybe (return id) (fmap applyIgnoreLabel . readLabel) (ignoreLabelFile config)
+  mesh <- maybe (return emptyGraph) (readGraph) (graphFile config)
   case config of
-    TestRun -> print "test"
     conf@GetClusters{} -> do
-      reject <- maybe (return id) (fmap applyIgnoreLabel . readLabel) (gcIgnoreLabelFile conf)
       stc <- fmap reject $ readStc $ gcStc conf
-      mesh <- readGraph $ gcGraphFile conf
-      let cc = ClusterConf { thresh = (gcClusterThreshold conf)
+      let cc = ClusterConf { thresh = (clusterThreshold conf)
                            , graph = mesh
                            , nVerts = n_vertices stc
                            , nTimes = n_times stc
                            }
-          thin = if not (gcNoThinClusters conf)
-                 then clusterThinning mesh (>(thresh cc))
-                 else id
+          thin = if noThinClusters conf
+                 then id
+                 else clusterThinning mesh (>(thresh cc))
           gc = filter ((> (gcMinClusterSize conf)) . length) . clusters mesh (>(thresh cc))
       forM_ (zip [(1::Int)..] (onVertices cc (gc . thin . V.map abs) (stc_data stc))) $ \(t, cs) -> do
         when (length cs > 0) $
           hPutStrLn stderr $ printf "t = %3d: %s" t (intercalate "," $ map (show . length) cs)
     conf@Conf{} -> do
-      reject <- maybe (return id) (fmap applyIgnoreLabel . readLabel) (ignoreLabelFile conf)
       -- load stc files for both conditions
       [a, b] <- fmap (transpose . grouped 2) $ mapM (fmap reject . readStc) (stcs conf)
 
@@ -47,7 +45,6 @@ main = do
       meth <- case (method conf) of
         "maxt" -> return $ AnyMethod (modFiltNaN $ modAbs $ MaxThreshold)
         m | m `elem` ["maxclust", "maxmass"] -> do
-          mesh <- readGraph (graphFile conf)
           let cc = ClusterConf { thresh = (clusterThreshold conf)
                                , graph = mesh
                                , nVerts = n_vertices $ head a
