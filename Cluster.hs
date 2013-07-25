@@ -7,7 +7,7 @@ import qualified Data.Set as S
 applyClusters :: (Show f, Floating f, V.Unbox f) => V.Vector f -> [[Int]] -> V.Vector f
 applyClusters arr = applyClusters' (V.replicate (V.length arr) 0)
   where applyClusters' narr [] = narr
-        applyClusters' narr (cs:rest) = applyClusters' (narr V.// map (\i -> (i, arr V.! i)) cs) rest
+        applyClusters' narr (cs:rest) = applyClusters' (narr V.// map (\i -> (i, 1)) cs) rest
 
 -- | Find all clusters in a vector, according to given test
 -- | Returns lists of indices
