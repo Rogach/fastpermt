@@ -11,7 +11,6 @@ import Fastpermt.Stat
 import Fastpermt.Stc
 import Fastpermt.Util
 import System.Console.CmdArgs
-import System.IO (stdout, stderr, hPutStrLn)
 import System.Random (mkStdGen, randoms)
 import Text.Printf
 import qualified Data.ByteString.Lazy as BS
@@ -36,11 +35,11 @@ main = do
           gc = filter ((> (gcMinClusterSize conf)) . length) . clusters mesh (>(thresh cc))
           clsts = (onVertices cc (gc . thin . V.map abs) (stc_data stc))
       if shortFormat conf
-      then putStrLn $ intercalate " " $ map (show . fst) $
-           filter (not . null . snd)$ zip [(1::Int)..] clsts
-      else forM_ (zip [(1::Int)..] clsts) $ \(t, cs) -> do
-        when (length cs > 0) $
-          printf "t = %3d: %s\n" t (intercalate "," $ map (show . length) cs)
+        then putStrLn $ intercalate " " $ map (show . fst) $
+             filter (not . null . snd)$ zip [(1::Int)..] clsts
+        else forM_ (zip [(1::Int)..] clsts) $ \(t, cs) -> do
+          when (length cs > 0) $
+            printf "t = %3d: %s\n" t (intercalate "," $ map (show . length) cs)
     conf@Conf{} -> do
       -- load stc files for both conditions
       [a, b] <- fmap (transpose . grouped 2) $ mapM (fmap reject . readStc) (stcs conf)
@@ -73,12 +72,12 @@ main = do
           outStc = (head a) { stc_data = corrSpm }
 
       forM_ (zip distribution pm) $ \(v, r) -> do
-        hPutStrLn stderr $ printf "%7.2f (%s)" v (map (\f -> if f then '-' else '/') r)
+         printf "%7.2f (%s)" v (map (\f -> if f then '-' else '/') r)
 
-      hPutStrLn stderr ("thresh: " ++ show cutoff)
-      hPutStrLn stderr ("orig: " ++ show (apply meth (vectorTTest (map stc_data a) (map stc_data b))))
+      putStrLn ("thresh: " ++ show cutoff)
+      putStrLn ("orig: " ++ show (apply meth (vectorTTest (map stc_data a) (map stc_data b))))
 
-      BS.hPut stdout (writeStc outStc)
+      BS.writeFile (outputFile conf) (writeStc outStc)
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
 applyPermutation _ [] _ _ = []

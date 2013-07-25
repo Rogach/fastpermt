@@ -11,6 +11,7 @@ data Config = Conf { method :: String
                    , graphFile :: Maybe FilePath
                    , noThinClusters :: Bool
                    , ignoreLabelFile :: Maybe FilePath
+                   , outputFile :: FilePath
                    }
             | GetClusters { gcMinClusterSize :: Int
                           , shortFormat :: Bool
@@ -33,8 +34,9 @@ defConf =
                      help "graph file for cluster algorithms"
        , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
                           help "supress cluster thinning?"
-       , ignoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=
+       , ignoreLabelFile = Nothing &= typFile &= explicit &= name "ignore-label" &=
                            help "mne label file with vertices to ignore"
+       , outputFile = "" &= typ "STC" &= explicit &= name "output" &= name "o"
        } &= name "run"
 
 getClustersConf :: Config
