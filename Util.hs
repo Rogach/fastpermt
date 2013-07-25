@@ -23,7 +23,7 @@ data Stc = Stc { tmin :: Float
                , tstep :: Float
                , n_vertices :: Int
                , n_times :: Int
-               , source_vector :: [Word32]
+               , stc_vertices :: [Int]
                , stc_data :: V.Vector Float
                } deriving (Show)
 
@@ -38,7 +38,7 @@ instance Binary Stc where
     tMin <- getFloat32be
     tStep <- getFloat32be
     nVertices <- getInt32be
-    sourceVector <- replicateM nVertices get -- I wouldn't be unpacking this, I am too lazy
+    sourceVector <- replicateM nVertices getInt32be
     nTimes <- getInt32be
     values <- V.replicateM (nVertices * nTimes) getFloat32be
     return $ Stc tMin tStep nVertices nTimes sourceVector values
@@ -46,7 +46,7 @@ instance Binary Stc where
     putFloat32be tMin
     putFloat32be tStep
     putInt32be nVertices
-    mapM_ put sourceVector
+    mapM_ putInt32be sourceVector
     putInt32be nTimes
     V.mapM_ putFloat32be values
 
