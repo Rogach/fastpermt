@@ -1,5 +1,6 @@
 module Fastpermt (main) where
 
+import Control.Monad
 import Fastpermt.Stat
 import Fastpermt.Util
 import Fastpermt.Methods
@@ -9,6 +10,7 @@ import Data.Maybe
 import System.Random (mkStdGen, randoms)
 import System.IO (stdout, stderr, hPutStrLn)
 import System.Console.CmdArgs
+import Text.Printf
 import qualified Data.ByteString.Lazy as BS
 
 main :: IO ()
@@ -24,8 +26,6 @@ main = do
       b <- mapM readStc condBfnames
       let nt = fromMaybe (n_times $ head a) (nTimesOpt conf)
           nv = fromMaybe (n_vertices $ head a) (nVertsOpt conf)
-      hPutStrLn stderr ("nTimes = " ++ show nt)
-      hPutStrLn stderr ("nVerts = " ++ show nv)
 
       -- select permutation method
       meth <- case (method conf) of
@@ -52,7 +52,9 @@ main = do
           corrSpm = threshold meth cutoff origSpm
           outStc = (head a) { stc_data = corrSpm }
 
-      hPutStrLn stderr ("distribution: " ++ show distribution)
+      forM_ (zip distribution pm) $ \(v, r) -> do
+        hPutStrLn stderr (printf "%7.2f (%s)" v (map (\f -> if f then '-' else '/') r))
+
       hPutStrLn stderr ("thresh: " ++ show cutoff)
       hPutStrLn stderr ("orig: " ++ show (apply meth (vectorTTest (map stc_data a) (map stc_data b))))
 
