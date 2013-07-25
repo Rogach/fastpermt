@@ -14,11 +14,13 @@ data Config = TestRun
                   , nVertsOpt :: Maybe Int
                   , nTimesOpt :: Maybe Int
                   }
-            | GetClusters { gcThinClusters :: Bool
-                          , gcNVertsOpt :: Maybe Int
-                          , gcNTimesOpt :: Maybe Int
+            | GetClusters { gcMinClusterSize :: Int
+                          , gcClusterThreshold :: Float
+                          , gcThinClusters :: Bool
                           , gcGraphFile :: FilePath
                           , gcStc :: FilePath
+                          , gcNVertsOpt :: Maybe Int
+                          , gcNTimesOpt :: Maybe Int
                           }
             deriving (Show, Data, Typeable)
 
@@ -30,7 +32,7 @@ defConf = Conf { method = "maxt" &= typ "NAME" &= help "permutation statistic to
                , stcs = [] &= args &= typ "STC"
                , count = 300 &= help "number of permutations"
                , clusterThreshold = 2.1314 &= explicit &= name "cluster-threshold" &=
-                                    help "cluster t-statistic value cut-off threshold"
+                                    help "voxel t-statistic value cut-off threshold"
                , graphFile = "" &= typFile &= explicit &= name "graph-file" &=
                              help "graph file for cluster algorithms"
                , thinClusters = False &= explicit &= name "thin-clusters" &=
@@ -40,18 +42,22 @@ defConf = Conf { method = "maxt" &= typ "NAME" &= help "permutation statistic to
                } &= name "run"
 
 getClustersConf :: Config
-getClustersConf = GetClusters { gcThinClusters = False &= explicit &= name "thin-clusters" &=
+getClustersConf = GetClusters { gcMinClusterSize = 0 &= explicit &= name "min-cluster-size" &=
+                                                   help "don't output clusters smaller than this"
+                              , gcClusterThreshold = 0 &= explicit &= name "cluster-threshold" &=
+                                                     help "voxel value cut-off threshold"
+                              , gcThinClusters = False &= explicit &= name "thin-clusters" &=
                                                  help "apply cluster thinning?"
-                              , gcNVertsOpt = Nothing &= explicit &= name "nverts"
-                              , gcNTimesOpt = Nothing &= explicit &= name "ntimes"
                               , gcGraphFile = "" &= typFile &= explicit &= name "graph-file" &=
                                               help "graph file for cluster algorithms"
                               , gcStc = "" &= typ "STC" &= argPos 0
+                              , gcNVertsOpt = Nothing &= explicit &= name "nverts"
+                              , gcNTimesOpt = Nothing &= explicit &= name "ntimes"
                               } &= name "clusters"
 
 confModes :: Config
 confModes =
-  modes [defConf, testRunConf, getClustersConf] &=
+  modes [defConf, getClustersConf, testRunConf] &=
   program "fastpermt" &=
   summary "" &=
   versionArg [ignore]

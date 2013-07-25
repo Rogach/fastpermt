@@ -25,7 +25,7 @@ main = do
       mesh <- readGraph $ gcGraphFile conf
       let nt = fromMaybe (n_times stc) (gcNTimesOpt conf)
           nv = fromMaybe (n_vertices stc) (gcNVertsOpt conf)
-          cc = ClusterConf { thresh = 0
+          cc = ClusterConf { thresh = (gcClusterThreshold conf)
                            , graph = mesh
                            , nVerts = nv
                            , nTimes = nt
@@ -33,7 +33,7 @@ main = do
           thin = if gcThinClusters conf
                  then clusterThinning mesh (>(thresh cc))
                  else id
-          gc = clusters mesh (>(thresh cc))
+          gc = filter ((> (gcMinClusterSize conf)) . length) . clusters mesh (>(thresh cc))
       forM_ (zip [(1::Int)..] (onVertices cc (gc . thin . V.map abs) (stc_data stc))) $ \(t, cs) -> do
         when (length cs > 0) $
           hPutStrLn stderr $ printf "t = %3d: %s" t (intercalate "," $ map (show . length) cs)
