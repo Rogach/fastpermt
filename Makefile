@@ -13,7 +13,7 @@ profile: clean
 	cat fastpermt.prof
 
 send: compile-static
-	install -m a+x fastpermt /media/meg/data/programs/platon/prj/permt/build/fastpermt
+	install -m a+rwx fastpermt /media/meg/data/programs/platon/prj/permt/build/fastpermt
 
 clean:
 	rm -f fastpermt *.o *.hi fastpermt.prof
