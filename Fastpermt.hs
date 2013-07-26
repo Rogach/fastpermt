@@ -72,7 +72,7 @@ main = do
           outStc = (head a) { stc_data = corrSpm }
 
       forM_ (zip distribution pm) $ \(v, r) -> do
-         printf "%7.2f (%s)" v (map (\f -> if f then '-' else '/') r)
+         printf "%7.2f (%s)\n" v (map (\f -> if f then '-' else '/') r)
 
       putStrLn ("thresh: " ++ show cutoff)
       putStrLn ("orig: " ++ show (apply meth (vectorTTest (map stc_data a) (map stc_data b))))
