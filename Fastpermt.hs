@@ -46,8 +46,8 @@ main = do
           corrSpm = threshold meth cutoff origSpm
           outStc = (head a) { stc_data = corrSpm }
 
-      forM_ (zip distribution pm) $ \(v, r) -> do
-         printf "%7.2f (%s)\n" v (map (\f -> if f then '-' else '/') r)
+      forM_ (zip3 [(1::Int)..] distribution pm) $ \(i, v, r) -> do
+         printf "%05d: %7.2f (%s)\n" i v (map (\f -> if f then '-' else '/') r)
 
       putStrLn ("thresh: " ++ show cutoff)
       putStrLn ("orig: " ++ show (apply meth (vectorTTest (map stc_data a) (map stc_data b))))
