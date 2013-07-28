@@ -24,7 +24,8 @@ main = do
   case config of
     conf@Conf{} -> do
       -- load stc files for both conditions
-      [a, b] <- fmap (transpose . grouped 2) $ mapM (fmap reject . readStc) (stcs conf)
+      [a, b] <- fmap (transpose . grouped 2) $
+                mapM (fmap (reject . truncateTime (tMin conf) (tMax conf)) . readStc) (stcs conf)
 
       -- select permutation method
       let cc = ClusterConf { thresh = (clusterThreshold conf)
@@ -55,7 +56,7 @@ main = do
       BS.writeFile (outputFile conf) (writeStc outStc)
 
     conf@ModifyMode{} -> do
-      stc <- fmap reject $ readStc $ inputFile conf
+      stc <- fmap (reject . truncateTime (tMin conf) (tMax conf)) $readStc $ inputFile conf
       let cc = ClusterConf { thresh = (clusterThreshold conf)
                            , graph = mesh
                            , nVerts = n_vertices $ stc
@@ -68,7 +69,7 @@ main = do
       BS.writeFile (outputFile conf) (writeStc outStc)
 
     conf@GetClusters{} -> do
-      stc <- fmap reject $ readStc $ gcStc conf
+      stc <- fmap (reject . truncateTime (tMin conf) (tMax conf)) $ readStc $ gcStc conf
       let cc = ClusterConf { thresh = (clusterThreshold conf)
                            , graph = mesh
                            , nVerts = n_vertices stc

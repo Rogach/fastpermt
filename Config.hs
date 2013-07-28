@@ -12,6 +12,8 @@ data Config = Conf { method :: String
                    , noThinClusters :: Bool
                    , applyTFCE :: Bool
                    , ignoreLabelFile :: Maybe FilePath
+                   , tMin :: Maybe Float
+                   , tMax :: Maybe Float
                    , outputFile :: FilePath
                    }
             | GetClusters { gcMinClusterSize :: Int
@@ -21,12 +23,16 @@ data Config = Conf { method :: String
                           , applyTFCE :: Bool
                           , graphFile :: Maybe FilePath
                           , ignoreLabelFile :: Maybe FilePath
+                          , tMin :: Maybe Float
+                          , tMax :: Maybe Float
                           , gcStc :: FilePath
                           }
             | ModifyMode { method :: String
                          , inputFile :: FilePath
                          , outputFile :: FilePath
                          , ignoreLabelFile :: Maybe FilePath
+                         , tMin :: Maybe Float
+                         , tMax :: Maybe Float
                          , graphFile :: Maybe FilePath
                          , clusterThreshold :: Float
                          , noThinClusters :: Bool
@@ -50,6 +56,8 @@ defConf =
                      help "apply tfce preprocessing to data"
        , ignoreLabelFile = Nothing &= typFile &= explicit &= name "ignore-label" &=
                            help "mne label file with vertices to ignore"
+       , tMin = Nothing &= typ "MS" &= help "starting time"
+       , tMax = Nothing &= typ "MS" &= help "ending time"
        , outputFile = "" &= typ "STC" &= explicit &= name "output" &= name "o"
        } &= name "run"
 
@@ -69,6 +77,8 @@ getClustersConf =
                             help "graph file for cluster algorithms"
               , ignoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=
                                     help "mne label file with vertices to ignore"
+              , tMin = Nothing &= typ "MS" &= help "starting time"
+              , tMax = Nothing &= typ "MS" &= help "ending time"
               , gcStc = "" &= typ "STC" &= argPos 0
               } &= name "clusters"
 
@@ -87,6 +97,8 @@ modifyConf =
                            help "graph file for cluster algorithms"
              , ignoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=
                                  help "mne label file with vertices to ignore"
+             , tMin = Nothing &= typ "MS" &= help "starting time"
+             , tMax = Nothing &= typ "MS" &= help "ending time"
              , methodThresh = 0 &= explicit &= name "method-threshold" &= name "m" &=
                               help "threshold for method application"
              } &= name "mod"
