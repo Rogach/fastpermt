@@ -68,8 +68,8 @@ getClustersConf =
 modifyConf :: Config
 modifyConf =
   ModifyMode { method = "maxt" &= typ "NAME" &= help "permutation statistic to use"
-             , inputFile = "" &= typ "STC" &= argPos 0
-             , outputFile = "" &= typ "STC" &= argPos 1
+             , inputFile = "" &= typ "STCIN" &= argPos 0
+             , outputFile = "" &= typ "STCOUT" &= argPos 1
              , clusterThreshold = 0 &= explicit &= name "cluster-threshold" &= name "t" &=
                                   help "voxel value cut-off threshold"
              , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
@@ -80,7 +80,7 @@ modifyConf =
                                  help "mne label file with vertices to ignore"
              , methodThresh = 0 &= explicit &= name "method-threshold" &= name "m" &=
                               help "threshold for method application"
-             }
+             } &= name "mod"
 
 confModes :: Config
 confModes =
