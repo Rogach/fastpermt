@@ -34,3 +34,15 @@ clusterThinning graph test larr =
                             if test v || any test (map (arr V.!) (grlookup graph i))
                             then larr V.! i else 0) arr
   in expand $ shrink larr
+
+tfce :: (Ord f, Enum f, Floating f, V.Unbox f) => Graph -> V.Vector f -> V.Vector f
+tfce graph larr =
+  let max = V.maximum larr
+      delta = max/50
+      ts = takeWhile (<max) [delta/2,delta*3/2..]
+  in foldl (\arr t ->
+             let cs = clusters graph (>t) larr
+             in foldl (\arr ci ->
+                        let v = ((fromIntegral $ length ci) ** (2/3)) * (t ** 2) * delta
+                        in arr V.// map (\i -> (i, arr V.! i + v)) ci) arr cs
+             ) (V.replicate (V.length larr) 0) ts
