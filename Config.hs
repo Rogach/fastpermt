@@ -21,6 +21,15 @@ data Config = Conf { method :: String
                           , ignoreLabelFile :: Maybe FilePath
                           , gcStc :: FilePath
                           }
+            | ModifyMode { method :: String
+                         , inputFile :: FilePath
+                         , outputFile :: FilePath
+                         , ignoreLabelFile :: Maybe FilePath
+                         , graphFile :: Maybe FilePath
+                         , clusterThreshold :: Float
+                         , noThinClusters :: Bool
+                         , methodThresh :: Float
+                         }
             deriving (Show, Data, Typeable)
 
 defConf :: Config
@@ -56,9 +65,26 @@ getClustersConf =
               , gcStc = "" &= typ "STC" &= argPos 0
               } &= name "clusters"
 
+modifyConf :: Config
+modifyConf =
+  ModifyMode { method = "maxt" &= typ "NAME" &= help "permutation statistic to use"
+             , inputFile = "" &= typ "STC" &= argPos 0
+             , outputFile = "" &= typ "STC" &= argPos 1
+             , clusterThreshold = 0 &= explicit &= name "cluster-threshold" &= name "t" &=
+                                  help "voxel value cut-off threshold"
+             , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
+                                help "supress cluster thinning?"
+             , graphFile = Nothing &= typFile &= explicit &= name "graph-file" &= name "g" &=
+                           help "graph file for cluster algorithms"
+             , ignoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=
+                                 help "mne label file with vertices to ignore"
+             , methodThresh = 0 &= explicit &= name "method-threshold" &= name "m" &=
+                              help "threshold for method application"
+             }
+
 confModes :: Config
 confModes =
-  modes [defConf, getClustersConf] &=
+  modes [defConf, getClustersConf, modifyConf] &=
   program "fastpermt" &=
   summary "" &=
   versionArg [ignore]

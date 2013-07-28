@@ -22,44 +22,18 @@ main = do
   reject <- maybe (return id) (fmap applyIgnoreLabel . readLabel) (ignoreLabelFile config)
   mesh <- maybe (return emptyGraph) (readGraph) (graphFile config)
   case config of
-    conf@GetClusters{} -> do
-      stc <- fmap reject $ readStc $ gcStc conf
-      let cc = ClusterConf { thresh = (clusterThreshold conf)
-                           , graph = mesh
-                           , nVerts = n_vertices stc
-                           , nTimes = n_times stc
-                           }
-          thin = if noThinClusters conf
-                 then id
-                 else clusterThinning mesh (>(thresh cc))
-          gc = filter ((> (gcMinClusterSize conf)) . length) . clusters mesh (>(thresh cc))
-          clsts = (onVertices cc (gc . thin . V.map abs) (stc_data stc))
-      if shortFormat conf
-        then putStrLn $ intercalate " " $ map (show . fst) $
-             filter (not . null . snd)$ zip [(1::Int)..] clsts
-        else forM_ (zip [(1::Int)..] clsts) $ \(t, cs) -> do
-          when (length cs > 0) $
-            printf "t = %3d: %s\n" t (intercalate "," $ map (show . length) cs)
     conf@Conf{} -> do
       -- load stc files for both conditions
       [a, b] <- fmap (transpose . grouped 2) $ mapM (fmap reject . readStc) (stcs conf)
 
       -- select permutation method
-      meth <- case (method conf) of
-        "maxt" -> return $ AnyMethod (modFiltNaN $ modAbs $ MaxThreshold)
-        m | m `elem` ["maxclust", "maxmass"] -> do
-          let cc = ClusterConf { thresh = (clusterThreshold conf)
-                               , graph = mesh
-                               , nVerts = n_vertices $ head a
-                               , nTimes = n_times $ head a
-                               }
-          return $ case m of
-            "maxclust" | noThinClusters conf -> AnyMethod $ modFiltNaN $ modAbs $ MaxClusterSize cc
-            "maxclust" -> AnyMethod $ modFiltNaN $ modAbs $ modClusterThinning cc $ MaxClusterSize cc
-            "maxmass" | noThinClusters conf -> AnyMethod $ modFiltNaN $ modAbs $ MaxClusterMass cc
-            "maxmass" -> AnyMethod $ modFiltNaN $ modAbs $ modClusterThinning cc $ MaxClusterMass cc
-            _ -> error ("Unknown permutation method: " ++ show m)
-        m -> error ("Unknown permutation method: " ++ show m)
+      let cc = ClusterConf { thresh = (clusterThreshold conf)
+                           , graph = mesh
+                           , nVerts = n_vertices $ head a
+                           , nTimes = n_times $ head a
+                           }
+          thin' = if (noThinClusters conf) then id else AnyMethod . modClusterThinning cc
+          meth = modFiltNaN $ modAbs $ thin' $ getMethod (method conf) cc
 
       -- meat of the algo
       let g = mkStdGen 5582031 -- pre-generated random seed, to ensure stable results
@@ -78,6 +52,45 @@ main = do
       putStrLn ("orig: " ++ show (apply meth (vectorTTest (map stc_data a) (map stc_data b))))
 
       BS.writeFile (outputFile conf) (writeStc outStc)
+
+    conf@ModifyMode{} -> do
+      stc <- fmap reject $ readStc $ inputFile conf
+      let cc = ClusterConf { thresh = (clusterThreshold conf)
+                           , graph = mesh
+                           , nVerts = n_vertices $ stc
+                           , nTimes = n_times $ stc
+                           }
+          thin' = if (noThinClusters conf) then id else AnyMethod . modClusterThinning cc
+          meth = modFiltNaN $ modAbs $ thin' $ getMethod (method conf) cc
+          outStc = stc { stc_data = threshold meth (methodThresh conf) (stc_data stc) }
+      BS.writeFile (outputFile conf) (writeStc outStc)
+
+    conf@GetClusters{} -> do
+      stc <- fmap reject $ readStc $ gcStc conf
+      let cc = ClusterConf { thresh = (clusterThreshold conf)
+                           , graph = mesh
+                           , nVerts = n_vertices stc
+                           , nTimes = n_times stc
+                           }
+          thin = if noThinClusters conf
+                 then id
+                 else clusterThinning mesh (>(thresh cc))
+          gc = filter ((> (gcMinClusterSize conf)) . length) . clusters mesh (>(thresh cc))
+          clsts = (onVertices cc (gc . thin . V.map abs) (stc_data stc))
+      if shortFormat conf
+        then putStrLn $ intercalate " " $ map (show . fst) $
+             filter (not . null . snd)$ zip [(1::Int)..] clsts
+        else forM_ (zip [(1::Int)..] clsts) $ \(t, cs) -> do
+          when (length cs > 0) $
+            printf "t = %3d: %s\n" t (intercalate "," $ map (show . length) cs)
+
+getMethod :: String -> ClusterConf -> AnyMethod
+getMethod name cc = case name of
+  "id" -> AnyMethod IdMethod
+  "maxt" -> AnyMethod MaxThreshold
+  "maxclust" -> AnyMethod $ MaxClusterSize cc
+  "maxmass" -> AnyMethod $ MaxClusterMass cc
+  m -> error ("Unknown permutation method: " ++ show m)
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
 applyPermutation _ [] _ _ = []

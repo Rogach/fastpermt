@@ -1,5 +1,6 @@
 {-# LANGUAGE ExistentialQuantification, NamedFieldPuns #-}
 module Fastpermt.Methods ( Method(..)
+                         , IdMethod(..)
                          , MaxThreshold(..)
                          , MaxClusterSize(..)
                          , MaxClusterMass(..)
@@ -29,6 +30,11 @@ instance Method AnyMethod where
   apply (AnyMethod m) = apply m
   threshold (AnyMethod m) = threshold m
 
+
+data IdMethod = IdMethod deriving (Eq, Show)
+instance Method IdMethod where
+  apply _ _ = 0
+  threshold _ _ = id
 
 data MaxThreshold = MaxThreshold deriving (Eq, Show)
 instance Method MaxThreshold where
