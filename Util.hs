@@ -5,8 +5,10 @@ import Data.Binary.Get
 import Data.Binary.Put
 import Debug.Trace
 import Fastpermt.Config
+import Fastpermt.Graph
 import Unsafe.Coerce
 import qualified Data.Vector.Unboxed as V
+import qualified Data.Map as M
 
 onVertices :: ClusterConf -> (V.Vector Float -> a) -> V.Vector Float -> [a]
 onVertices conf op vals =
@@ -28,3 +30,11 @@ grouped n xs = take n xs : grouped n (drop n xs)
 
 pDebug :: (Show b) => String -> (a -> b) -> a -> a
 pDebug msg str a = trace (msg ++ (show $ str a)) a
+
+spatioTemporalGraph :: ClusterConf -> Graph -> Graph
+spatioTemporalGraph ClusterConf { nVerts = nv, nTimes = nt } graph =
+  M.fromList [ (t*nv + v, [(t-1)*nv+v] ++ ng ++ [(t+1)*nv+v])
+             | v <- [0..nv-1]
+             , t <- [0..nt-1]
+             , let ng = map (+(t*nv)) $ grlookup graph v
+             ]

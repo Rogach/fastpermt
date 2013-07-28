@@ -33,7 +33,8 @@ main = do
                            , nTimes = n_times $ head a
                            }
           thin' = if (noThinClusters conf) then id else AnyMethod . modClusterThinning cc
-          meth = modFiltNaN $ modAbs $ thin' $ getMethod (method conf) cc
+          tfce' = if (applyTFCE conf) then AnyMethod . modTFCE (spatioTemporalGraph cc mesh) else id
+          meth = modFiltNaN $ modAbs $ tfce' $ thin' $ getMethod (method conf) cc
 
       -- meat of the algo
       let g = mkStdGen 5582031 -- pre-generated random seed, to ensure stable results
@@ -61,7 +62,8 @@ main = do
                            , nTimes = n_times $ stc
                            }
           thin' = if (noThinClusters conf) then id else AnyMethod . modClusterThinning cc
-          meth = modFiltNaN $ modAbs $ thin' $ getMethod (method conf) cc
+          tfce' = if (applyTFCE conf) then AnyMethod . modTFCE (spatioTemporalGraph cc mesh) else id
+          meth = modFiltNaN $ modAbs $ tfce' $ thin' $ getMethod (method conf) cc
           outStc = stc { stc_data = threshold meth (methodThresh conf) (stc_data stc) }
       BS.writeFile (outputFile conf) (writeStc outStc)
 
@@ -90,7 +92,7 @@ getMethod name cc = case name of
   "maxt" -> AnyMethod MaxThreshold
   "maxclust" -> AnyMethod $ MaxClusterSize cc
   "maxmass" -> AnyMethod $ MaxClusterMass cc
-  m -> error ("Unknown permutation method: " ++ show m)
+  _ -> undefined
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
 applyPermutation _ [] _ _ = []

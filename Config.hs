@@ -10,6 +10,7 @@ data Config = Conf { method :: String
                    , clusterThreshold :: Float
                    , graphFile :: Maybe FilePath
                    , noThinClusters :: Bool
+                   , applyTFCE :: Bool
                    , ignoreLabelFile :: Maybe FilePath
                    , outputFile :: FilePath
                    }
@@ -17,6 +18,7 @@ data Config = Conf { method :: String
                           , shortFormat :: Bool
                           , clusterThreshold :: Float
                           , noThinClusters :: Bool
+                          , applyTFCE :: Bool
                           , graphFile :: Maybe FilePath
                           , ignoreLabelFile :: Maybe FilePath
                           , gcStc :: FilePath
@@ -28,6 +30,7 @@ data Config = Conf { method :: String
                          , graphFile :: Maybe FilePath
                          , clusterThreshold :: Float
                          , noThinClusters :: Bool
+                         , applyTFCE :: Bool
                          , methodThresh :: Float
                          }
             deriving (Show, Data, Typeable)
@@ -43,6 +46,8 @@ defConf =
                      help "graph file for cluster algorithms"
        , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
                           help "supress cluster thinning?"
+       , applyTFCE = False &= explicit &= name "tfce" &=
+                     help "apply tfce preprocessing to data"
        , ignoreLabelFile = Nothing &= typFile &= explicit &= name "ignore-label" &=
                            help "mne label file with vertices to ignore"
        , outputFile = "" &= typ "STC" &= explicit &= name "output" &= name "o"
@@ -58,6 +63,8 @@ getClustersConf =
                                    help "voxel value cut-off threshold"
               , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
                                    help "supress cluster thinning?"
+              , applyTFCE = False &= explicit &= name "tfce" &=
+                            help "apply tfce preprocessing to data"
               , graphFile = Nothing &= typFile &= explicit &= name "graph-file" &= name "g" &=
                             help "graph file for cluster algorithms"
               , ignoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=
@@ -74,6 +81,8 @@ modifyConf =
                                   help "voxel value cut-off threshold"
              , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
                                 help "supress cluster thinning?"
+             , applyTFCE = False &= explicit &= name "tfce" &=
+                           help "apply tfce preprocessing to data"
              , graphFile = Nothing &= typFile &= explicit &= name "graph-file" &= name "g" &=
                            help "graph file for cluster algorithms"
              , ignoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=

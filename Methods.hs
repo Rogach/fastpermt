@@ -8,11 +8,13 @@ module Fastpermt.Methods ( Method(..)
                          , modAbs
                          , modFiltNaN
                          , modClusterThinning
+                         , modTFCE
                          , onVertices
                          ) where
 
 import Fastpermt.Cluster
 import Fastpermt.Config
+import Fastpermt.Graph
 import Fastpermt.Util (onVertices)
 import qualified Data.Vector.Unboxed as V
 
@@ -75,3 +77,6 @@ modFiltNaN = ModifiedMethod (V.map (\v -> if v /= v then 0 else v))
 modClusterThinning :: Method m => ClusterConf -> m -> ModifiedMethod m
 modClusterThinning conf =
   ModifiedMethod (V.concat . onVertices conf (clusterThinning (graph conf) (>(thresh conf))))
+
+modTFCE :: Method m => Graph -> m -> ModifiedMethod m
+modTFCE graph = ModifiedMethod (tfce graph)
