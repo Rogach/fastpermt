@@ -40,3 +40,11 @@ spatioTemporalGraph ClusterConf { nVerts = nv, nTimes = nt } graph =
                    ng0 = if t > 0 then [(t-1)*nv+v] else []
                    ng2 = if t < nt - 1 then [(t+1)*nv+v] else []
              ]
+
+spatialGraph :: ClusterConf -> Graph -> Graph
+spatialGraph ClusterConf { nVerts = nv, nTimes = nt } graph =
+  M.fromList [ (t*nv + v, ng)
+             | v <- [0..nv-1]
+             , t <- [0..nt-1]
+             , let ng = map (+(t*nv)) $ grlookup graph v
+             ]

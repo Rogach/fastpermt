@@ -33,7 +33,7 @@ main = do
                            , nTimes = n_times $ head a
                            }
           thin' = if (noThinClusters conf) then id else AnyMethod . modClusterThinning cc
-          tfce' = if (applyTFCE conf) then AnyMethod . modTFCE (spatioTemporalGraph cc mesh) else id
+          tfce' = if (applyTFCE conf) then AnyMethod . modTFCE (spatialGraph cc mesh) else id
           meth = modFiltNaN $ modAbs $ tfce' $ thin' $ getMethod (method conf) cc
 
       -- meat of the algo
@@ -62,7 +62,7 @@ main = do
                            , nTimes = n_times $ stc
                            }
           thin' = if (noThinClusters conf) then id else AnyMethod . modClusterThinning cc
-          tfce' = if (applyTFCE conf) then AnyMethod . modTFCE (spatioTemporalGraph cc mesh) else id
+          tfce' = if (applyTFCE conf) then AnyMethod . modTFCE (spatialGraph cc mesh) else id
           meth = modFiltNaN $ modAbs $ tfce' $ thin' $ getMethod (method conf) cc
           outStc = stc { stc_data = threshold meth (methodThresh conf) (stc_data stc) }
       BS.writeFile (outputFile conf) (writeStc outStc)
