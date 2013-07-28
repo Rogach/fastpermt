@@ -79,10 +79,11 @@ main = do
                  else clusterThinning mesh (>(thresh cc))
           gc = filter ((> (gcMinClusterSize conf)) . length) . clusters mesh (>(thresh cc))
           clsts = (onVertices cc (gc . thin . V.map abs) (stc_data stc))
+          times = [(round $ tmin stc),(round $ tmin stc + tstep stc)..] :: [Int]
       if shortFormat conf
         then putStrLn $ intercalate " " $ map (show . fst) $
-             filter (not . null . snd)$ zip [(1::Int)..] clsts
-        else forM_ (zip [(1::Int)..] clsts) $ \(t, cs) -> do
+             filter (not . null . snd) $ zip times clsts
+        else forM_ (zip times clsts) $ \(t, cs) -> do
           when (length cs > 0) $
             printf "t = %3d: %s\n" t (intercalate "," $ map (show . length) cs)
 
