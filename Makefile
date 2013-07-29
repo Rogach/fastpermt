@@ -1,5 +1,5 @@
 run: compile
-	bash -c 'time ./fastpermt run --tmin 65 --tmax 75 --method maxclust --no-thin-clusters --graph-file aux/graph -c 300 --ignore-label aux/ft_ignore-lh.label $$(ls data/ | cut -f1,2 -d_ | uniq | xargs -I{} echo data/{}_45_control-lh.stc data/{}_45_kanizsa-lh.stc) -o aux/result.stc'
+	bash -c 'time ./fastpermt run --tmin 60 --tmax 100 --method maxt --tfce --no-thin-clusters --graph-file aux/graph -c 300 --ignore-label aux/ft_ignore-lh.label $$(ls data/ | cut -f1,2 -d_ | uniq | xargs -I{} echo data/{}_45_control-lh.stc data/{}_45_kanizsa-lh.stc) -o aux/result.stc'
 
 compile:
 	ghc -O3 -Wall -o fastpermt -fno-warn-name-shadowing -main-is Fastpermt *.hs

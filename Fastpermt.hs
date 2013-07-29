@@ -94,7 +94,7 @@ getMethod conf cc =
         "maxmass" -> AnyMethod $ MaxClusterMass cc
         _ -> undefined
       thin' = if noThinClusters conf then id else AnyMethod . modClusterThinning cc
-      tfce' = if applyTFCE conf then AnyMethod . modTFCE (spatialGraph cc) else id
+      tfce' = if applyTFCE conf then AnyMethod . modTFCE (spatioTemporalGraph cc) else id
   in AnyMethod $ modFiltNaN $ modAbs $ tfce' $ thin' meth
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
