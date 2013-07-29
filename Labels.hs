@@ -21,8 +21,7 @@ applyIgnoreLabel (MneLabel lbl) stc@Stc { n_vertices = nv
   in stc { stc_data = V.concat $ onVertices (emptyCC { nVerts = nv, nTimes = nt }) op dt }
   where intersect' [] _ = []
         intersect' _ [] = []
-        intersect' (a:as) (b:bs) = if a == b
-                                   then a : intersect' as bs
-                                   else if a > b
-                                        then intersect' (a:as) bs
-                                        else intersect' as (b:bs)
+        intersect' (a:as) (b:bs)
+          | a == b = a : intersect' as bs
+          | a > b = intersect' (a:as) bs
+          | otherwise = intersect' as (b:bs)

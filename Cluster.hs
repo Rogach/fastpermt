@@ -5,9 +5,7 @@ import qualified Data.Set as S
 import qualified Data.Vector.Unboxed as V
 
 applyClusters :: (Floating f, V.Unbox f) => V.Vector f -> [[Int]] -> V.Vector f
-applyClusters arr = applyClusters' (V.replicate (V.length arr) 0)
-  where applyClusters' narr [] = narr
-        applyClusters' narr (cs:rest) = applyClusters' (narr V.// map (\i -> (i, 1)) cs) rest
+applyClusters arr = foldl (\narr cs -> narr V.// map (\i -> (i, 1)) cs) (V.replicate (V.length arr) 0)
 
 -- | Find all clusters in a vector, according to given test
 -- | Returns lists of indices
@@ -43,6 +41,6 @@ tfce graph larr =
   in foldl (\arr t ->
              let cs = clusters graph (>t) larr
              in foldl (\arr ci ->
-                        let v = ((fromIntegral $ length ci) ** (2/3)) * (t ** 2) * delta
+                        let v = (fromIntegral (length ci) ** (2/3)) * (t ** 2) * delta
                         in arr V.// map (\i -> (i, arr V.! i + v)) ci) arr cs
              ) (V.replicate (V.length larr) 0) ts

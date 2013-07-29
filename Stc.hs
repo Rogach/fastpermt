@@ -18,7 +18,7 @@ readStc :: FilePath -> IO Stc
 readStc f = liftM decode (BS.readFile f)
 
 writeStc :: Stc -> BS.ByteString
-writeStc stc = encode stc
+writeStc = encode
 
 instance Binary Stc where
   get = do
@@ -40,7 +40,7 @@ instance Binary Stc where
 truncateTime :: Maybe Float -> Maybe Float -> Stc -> Stc
 truncateTime Nothing to stc@Stc { tmin = tm } = truncateTime (Just tm) to stc
 truncateTime from Nothing stc@Stc { tmin = tm, tstep = step, n_times = nt } =
-  truncateTime from (Just $ tm + step * (fromIntegral $ nt-1)) stc
+  truncateTime from (Just $ tm + step * fromIntegral (nt-1)) stc
 truncateTime (Just from) (Just to) stc@Stc { tmin = tm, tstep = step, n_vertices = nv } =
   let (before, after) = span (<from) [tm,(tm+step)..]
       (inside, _) = span (<=to) after

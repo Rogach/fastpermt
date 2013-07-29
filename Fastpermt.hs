@@ -21,7 +21,7 @@ main :: IO ()
 main = do
   config <- cmdArgs confModes
   reject <- maybe (return id) (fmap applyIgnoreLabel . readLabel) (ignoreLabelFile config)
-  mesh <- maybe (return emptyGraph) (readGraph) (graphFile config)
+  mesh <- maybe (return emptyGraph) readGraph (graphFile config)
   case config of
     conf@Conf{} -> do
       -- load stc files for both conditions
@@ -34,21 +34,19 @@ main = do
                            , nVerts = n_vertices $ head a
                            , nTimes = n_times $ head a
                            }
-          thin' = if (noThinClusters conf) then id else AnyMethod . modClusterThinning cc
-          tfce' = if (applyTFCE conf) then AnyMethod . modTFCE (spatialGraph cc mesh) else id
-          meth = modFiltNaN $ modAbs $ tfce' $ thin' $ getMethod (method conf) cc
+          meth = getMethod conf cc
 
       -- meat of the algo
       let g = mkStdGen 5582031 -- pre-generated random seed, to ensure stable results
-          pm = grouped (length a) $ take (length a * (count conf)) (randoms g :: [Bool])
+          pm = grouped (length a) $ take (length a * count conf) (randoms g :: [Bool])
           op as bs = apply meth (vectorTTest as bs)
           distribution = applyPermutation op pm (map stc_data a) (map stc_data b)
-          cutoff = sort distribution !! (floor $ fromIntegral (length distribution) * (0.95::Double))
+          cutoff = sort distribution !! floor (fromIntegral (length distribution) * (0.95::Double))
           origSpm = vectorTTest (map stc_data a) (map stc_data b)
           corrSpm = threshold meth cutoff origSpm
           outStc = (head a) { stc_data = corrSpm }
 
-      forM_ (zip3 [(1::Int)..] distribution pm) $ \(i, v, r) -> do
+      forM_ (zip3 [(1::Int)..] distribution pm) $ \(i, v, r) ->
          printf "%05d: %7.2f (%s)\n" i v (map (\f -> if f then '-' else '/') r)
 
       putStrLn ("thresh: " ++ show cutoff)
@@ -60,12 +58,10 @@ main = do
       stc <- fmap (reject . truncateTime (tMin conf) (tMax conf)) $readStc $ inputFile conf
       let cc = ClusterConf { thresh = fromMaybe 0 (clusterThreshold conf)
                            , graph = mesh
-                           , nVerts = n_vertices $ stc
-                           , nTimes = n_times $ stc
+                           , nVerts = n_vertices stc
+                           , nTimes = n_times stc
                            }
-          thin' = if (noThinClusters conf) then id else AnyMethod . modClusterThinning cc
-          tfce' = if (applyTFCE conf) then AnyMethod . modTFCE (spatialGraph cc mesh) else id
-          meth = modFiltNaN $ modAbs $ tfce' $ thin' $ getMethod (method conf) cc
+          meth = getMethod conf cc
           outStc = stc { stc_data = threshold meth (methodThresh conf) (stc_data stc) }
       BS.writeFile (outputFile conf) (writeStc outStc)
 
@@ -78,24 +74,28 @@ main = do
                            }
           thin = if noThinClusters conf
                  then id
-                 else clusterThinning mesh (>(thresh cc))
-          gc = filter ((> (gcMinClusterSize conf)) . length) . clusters mesh (>(thresh cc))
-          clsts = (onVertices cc (gc . thin . V.map abs) (stc_data stc))
+                 else clusterThinning mesh (> thresh cc)
+          gc = filter ((> gcMinClusterSize conf) . length) . clusters mesh (> thresh cc)
+          clsts = onVertices cc (gc . thin . V.map abs) (stc_data stc)
           times = [(round $ tmin stc),(round $ tmin stc + tstep stc)..] :: [Int]
       if shortFormat conf
-        then putStrLn $ intercalate " " $ map (show . fst) $
+        then putStrLn $ unwords $ map (show . fst) $
              filter (not . null . snd) $ zip times clsts
-        else forM_ (zip times clsts) $ \(t, cs) -> do
+        else forM_ (zip times clsts) $ \(t, cs) ->
           when (length cs > 0) $
             printf "t = %3d: %s\n" t (intercalate "," $ map (show . length) cs)
 
-getMethod :: String -> ClusterConf -> AnyMethod
-getMethod name cc = case name of
-  "id" -> AnyMethod IdMethod
-  "maxt" -> AnyMethod MaxThreshold
-  "maxclust" -> AnyMethod $ MaxClusterSize cc
-  "maxmass" -> AnyMethod $ MaxClusterMass cc
-  _ -> undefined
+getMethod :: Config -> ClusterConf -> AnyMethod
+getMethod conf cc =
+  let meth = case method conf of
+        "id" -> AnyMethod IdMethod
+        "maxt" -> AnyMethod MaxThreshold
+        "maxclust" -> AnyMethod $ MaxClusterSize cc
+        "maxmass" -> AnyMethod $ MaxClusterMass cc
+        _ -> undefined
+      thin' = if noThinClusters conf then id else AnyMethod . modClusterThinning cc
+      tfce' = if applyTFCE conf then AnyMethod . modTFCE (spatialGraph cc) else id
+  in AnyMethod $ modFiltNaN $ modAbs $ tfce' $ thin' meth
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
 applyPermutation _ [] _ _ = []
