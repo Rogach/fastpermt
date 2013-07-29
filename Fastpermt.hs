@@ -2,6 +2,7 @@ module Fastpermt (main) where
 
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Fastpermt.Cluster
 import Fastpermt.Config
 import Fastpermt.Graph
@@ -28,7 +29,7 @@ main = do
                 mapM (fmap (reject . truncateTime (tMin conf) (tMax conf)) . readStc) (stcs conf)
 
       -- select permutation method
-      let cc = ClusterConf { thresh = (clusterThreshold conf)
+      let cc = ClusterConf { thresh = fromMaybe (p2t (length a) 0.05) (clusterThreshold conf)
                            , graph = mesh
                            , nVerts = n_vertices $ head a
                            , nTimes = n_times $ head a
@@ -57,7 +58,7 @@ main = do
 
     conf@ModifyMode{} -> do
       stc <- fmap (reject . truncateTime (tMin conf) (tMax conf)) $readStc $ inputFile conf
-      let cc = ClusterConf { thresh = (clusterThreshold conf)
+      let cc = ClusterConf { thresh = fromMaybe 0 (clusterThreshold conf)
                            , graph = mesh
                            , nVerts = n_vertices $ stc
                            , nTimes = n_times $ stc
@@ -70,7 +71,7 @@ main = do
 
     conf@GetClusters{} -> do
       stc <- fmap (reject . truncateTime (tMin conf) (tMax conf)) $ readStc $ gcStc conf
-      let cc = ClusterConf { thresh = (clusterThreshold conf)
+      let cc = ClusterConf { thresh = fromMaybe 0 (clusterThreshold conf)
                            , graph = mesh
                            , nVerts = n_vertices stc
                            , nTimes = n_times stc

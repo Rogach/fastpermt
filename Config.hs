@@ -7,7 +7,7 @@ import System.Console.CmdArgs
 data Config = Conf { method :: String
                    , stcs :: [FilePath]
                    , count :: Int
-                   , clusterThreshold :: Float
+                   , clusterThreshold :: Maybe Float
                    , graphFile :: Maybe FilePath
                    , noThinClusters :: Bool
                    , applyTFCE :: Bool
@@ -18,7 +18,7 @@ data Config = Conf { method :: String
                    }
             | GetClusters { gcMinClusterSize :: Int
                           , shortFormat :: Bool
-                          , clusterThreshold :: Float
+                          , clusterThreshold :: Maybe Float
                           , noThinClusters :: Bool
                           , applyTFCE :: Bool
                           , graphFile :: Maybe FilePath
@@ -34,7 +34,7 @@ data Config = Conf { method :: String
                          , tMin :: Maybe Float
                          , tMax :: Maybe Float
                          , graphFile :: Maybe FilePath
-                         , clusterThreshold :: Float
+                         , clusterThreshold :: Maybe Float
                          , noThinClusters :: Bool
                          , applyTFCE :: Bool
                          , methodThresh :: Float
@@ -46,7 +46,7 @@ defConf =
   Conf { method = "maxt" &= typ "NAME" &= help "permutation statistic to use"
        , stcs = [] &= args &= typ "STC"
        , count = 1000 &= help "number of permutations"
-       , clusterThreshold = 2.1314 &= explicit &= name "cluster-threshold" &= name "t" &=
+       , clusterThreshold = Nothing &= explicit &= name "cluster-threshold" &= name "t" &=
                             help "voxel value cut-off threshold"
        , graphFile = Nothing &= typFile &= explicit &= name "graph-file" &= name "g" &=
                      help "graph file for cluster algorithms"
@@ -67,7 +67,7 @@ getClustersConf =
                                    help "don't output clusters smaller than this"
               , shortFormat = False &= explicit &= name "short" &= name "s" &=
                               help "only output space-separated times for clusters"
-              , clusterThreshold = 0 &= explicit &= name "cluster-threshold" &= name "t" &=
+              , clusterThreshold = Nothing &= explicit &= name "cluster-threshold" &= name "t" &=
                                    help "voxel value cut-off threshold"
               , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
                                    help "supress cluster thinning?"
@@ -87,7 +87,7 @@ modifyConf =
   ModifyMode { method = "maxt" &= typ "NAME" &= help "permutation statistic to use"
              , inputFile = "" &= typ "STCIN" &= argPos 0
              , outputFile = "" &= typ "STCOUT" &= argPos 1
-             , clusterThreshold = 0 &= explicit &= name "cluster-threshold" &= name "t" &=
+             , clusterThreshold = Nothing &= explicit &= name "cluster-threshold" &= name "t" &=
                                   help "voxel value cut-off threshold"
              , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
                                 help "supress cluster thinning?"
