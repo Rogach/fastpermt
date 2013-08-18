@@ -31,6 +31,12 @@ grouped n xs = take n xs : grouped n (drop n xs)
 pDebug :: (Show b) => String -> (a -> b) -> a -> a
 pDebug msg str a = trace (msg ++ show (str a)) a
 
+convertGraph :: Bool -> ClusterConf -> ClusterConf
+convertGraph isSpatioTemporal cc =
+  if isSpatioTemporal
+  then cc { graph = spatioTemporalGraph cc }
+  else cc { graph = spatialGraph cc }
+
 spatioTemporalGraph :: ClusterConf -> Graph
 spatioTemporalGraph ClusterConf { nVerts = nv, nTimes = nt, graph = graph } =
   M.fromList [ (t*nv + v, ng0 ++ ng ++ ng2)

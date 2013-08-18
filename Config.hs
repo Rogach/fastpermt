@@ -11,6 +11,7 @@ data Config = Conf { method :: String
                    , graphFile :: Maybe FilePath
                    , noThinClusters :: Bool
                    , applyTFCE :: Bool
+                   , spatioTemporal :: Bool
                    , ignoreLabelFile :: Maybe FilePath
                    , tMin :: Maybe Float
                    , tMax :: Maybe Float
@@ -19,26 +20,12 @@ data Config = Conf { method :: String
             | GetClusters { gcMinClusterSize :: Int
                           , shortFormat :: Bool
                           , clusterThreshold :: Maybe Float
-                          , noThinClusters :: Bool
-                          , applyTFCE :: Bool
                           , graphFile :: Maybe FilePath
                           , ignoreLabelFile :: Maybe FilePath
                           , tMin :: Maybe Float
                           , tMax :: Maybe Float
                           , gcStc :: FilePath
                           }
-            | ModifyMode { method :: String
-                         , inputFile :: FilePath
-                         , outputFile :: FilePath
-                         , ignoreLabelFile :: Maybe FilePath
-                         , tMin :: Maybe Float
-                         , tMax :: Maybe Float
-                         , graphFile :: Maybe FilePath
-                         , clusterThreshold :: Maybe Float
-                         , noThinClusters :: Bool
-                         , applyTFCE :: Bool
-                         , methodThresh :: Float
-                         }
             deriving (Show, Data, Typeable)
 
 defConf :: Config
@@ -54,6 +41,8 @@ defConf =
                           help "supress cluster thinning?"
        , applyTFCE = False &= explicit &= name "tfce" &=
                      help "apply tfce preprocessing to data"
+       , spatioTemporal = False &= explicit &= name "spatio-temporal" &=
+                          help "when searching for clusters, do not limit cluster to single time point"
        , ignoreLabelFile = Nothing &= typFile &= explicit &= name "ignore-label" &=
                            help "mne label file with vertices to ignore"
        , tMin = Nothing &= typ "MS" &= help "starting time"
@@ -69,10 +58,6 @@ getClustersConf =
                               help "only output space-separated times for clusters"
               , clusterThreshold = Nothing &= explicit &= name "cluster-threshold" &= name "t" &=
                                    help "voxel value cut-off threshold"
-              , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
-                                   help "supress cluster thinning?"
-              , applyTFCE = False &= explicit &= name "tfce" &=
-                            help "apply tfce preprocessing to data"
               , graphFile = Nothing &= typFile &= explicit &= name "graph-file" &= name "g" &=
                             help "graph file for cluster algorithms"
               , ignoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=
@@ -82,30 +67,9 @@ getClustersConf =
               , gcStc = "" &= typ "STC" &= argPos 0
               } &= name "clusters"
 
-modifyConf :: Config
-modifyConf =
-  ModifyMode { method = "maxt" &= typ "NAME" &= help "permutation statistic to use"
-             , inputFile = "" &= typ "STCIN" &= argPos 0
-             , outputFile = "" &= typ "STCOUT" &= argPos 1
-             , clusterThreshold = Nothing &= explicit &= name "cluster-threshold" &= name "t" &=
-                                  help "voxel value cut-off threshold"
-             , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
-                                help "supress cluster thinning?"
-             , applyTFCE = False &= explicit &= name "tfce" &=
-                           help "apply tfce preprocessing to data"
-             , graphFile = Nothing &= typFile &= explicit &= name "graph-file" &= name "g" &=
-                           help "graph file for cluster algorithms"
-             , ignoreLabelFile = Nothing &= typ "FILE" &= explicit &= name "ignore-label" &=
-                                 help "mne label file with vertices to ignore"
-             , tMin = Nothing &= typ "MS" &= help "starting time"
-             , tMax = Nothing &= typ "MS" &= help "ending time"
-             , methodThresh = 0 &= explicit &= name "method-threshold" &= name "m" &=
-                              help "threshold for method application"
-             } &= name "mod"
-
 confModes :: Config
 confModes =
-  modes [defConf, getClustersConf, modifyConf] &=
+  modes [defConf, getClustersConf] &=
   program "fastpermt" &=
   summary "" &=
   versionArg [ignore]

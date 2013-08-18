@@ -46,27 +46,24 @@ instance Method MaxThreshold where
 data MaxClusterSize = MaxClusterSize ClusterConf deriving (Show)
 instance Method MaxClusterSize where
   apply (MaxClusterSize conf) values =
-    let cs = concat $ onVertices conf (clusters (graph conf) (> thresh conf)) values
+    let cs = clusters (graph conf) (> thresh conf) values
     in if null cs
        then 0
        else fromIntegral $ maximum $ map length cs
   threshold (MaxClusterSize conf) th values =
     let fcs = filter ((>= th) . fromIntegral . length) . clusters (graph conf) (> thresh conf)
-    in V.concat $ onVertices conf (\piece -> applyClusters piece (fcs piece)) values
+    in applyClusters values (fcs values)
 
 data MaxClusterMass = MaxClusterMass ClusterConf deriving (Show)
 instance Method MaxClusterMass where
-  apply (MaxClusterMass conf) =
-    maximum . concat . onVertices conf (
-      \piece ->
-      map (sum . map (\c -> piece V.! c)) $
-      clusters (graph conf) (> thresh conf) piece
-    )
-  threshold (MaxClusterMass conf) th =
-    let fcs piece =
-          filter ((>= th) . sum . map (\c -> piece V.! c)) $
-          clusters (graph conf) (> thresh conf) piece
-    in V.concat . onVertices conf (\piece -> applyClusters piece (fcs piece))
+  apply (MaxClusterMass conf) values =
+    let cs = clusters (graph conf) (> thresh conf) values
+    in if null cs
+       then 0
+       else maximum $ map (sum . map (\c -> values V.! c)) cs
+  threshold (MaxClusterMass conf) th values =
+    let fcs = filter ((>= th) . sum . map (\c -> values V.! c)) . clusters (graph conf) (> thresh conf)
+    in applyClusters values (fcs values)
 
 modAbs :: Method m => m -> ModifiedMethod m
 modAbs = ModifiedMethod (V.map abs)
@@ -76,7 +73,7 @@ modFiltNaN = ModifiedMethod (V.map (\v -> if v /= v then 0 else v))
 
 modClusterThinning :: Method m => ClusterConf -> m -> ModifiedMethod m
 modClusterThinning conf =
-  ModifiedMethod (V.concat . onVertices conf (clusterThinning (graph conf) (> thresh conf)))
+  ModifiedMethod (clusterThinning (graph conf) (> thresh conf))
 
 modTFCE :: Method m => Graph -> m -> ModifiedMethod m
 modTFCE graph = ModifiedMethod (tfce graph)
