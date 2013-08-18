@@ -39,7 +39,7 @@ main = do
 
       -- meat of the algo
       let g = mkStdGen 5582031 -- pre-generated random seed, to ensure stable results
-          pm = grouped (length a) $ (randoms g :: [Bool])
+          pm = grouped (length a) $ take (length a * count conf) (randoms g :: [Bool])
           op as bs = apply meth (vectorTTest as bs)
           distribution = applyPermutation op pm (map stc_data a) (map stc_data b)
           cutoff = sort distribution !! floor (fromIntegral (length distribution) * (0.95::Double))
