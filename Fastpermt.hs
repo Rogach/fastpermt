@@ -80,7 +80,7 @@ getMethod conf cc =
         "maxclust" -> AnyMethod $ MaxClusterSize cc
         "maxmass" -> AnyMethod $ MaxClusterMass cc
         _ -> undefined
-      thin' = if noThinClusters conf then id else AnyMethod . modClusterThinning cc
+      thin' = if thinClusters conf then AnyMethod . modClusterThinning cc else id
       tfce' = if applyTFCE conf then AnyMethod . modTFCE (graph cc) else id
   in AnyMethod $ modFiltNaN $ modAbs $ tfce' $ thin' meth
 

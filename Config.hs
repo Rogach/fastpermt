@@ -9,7 +9,7 @@ data Config = Conf { method :: String
                    , count :: Int
                    , clusterThreshold :: Maybe Float
                    , graphFile :: Maybe FilePath
-                   , noThinClusters :: Bool
+                   , thinClusters :: Bool
                    , applyTFCE :: Bool
                    , spatioTemporal :: Bool
                    , ignoreLabelFile :: Maybe FilePath
@@ -37,8 +37,8 @@ defConf =
                             help "voxel value cut-off threshold"
        , graphFile = Nothing &= typFile &= explicit &= name "graph-file" &= name "g" &=
                      help "graph file for cluster algorithms"
-       , noThinClusters = False &= explicit &= name "no-thin-clusters" &=
-                          help "supress cluster thinning?"
+       , thinClusters = False &= explicit &= name "thin-clusters" &=
+                          help "apply cluster thinning?"
        , applyTFCE = False &= explicit &= name "tfce" &=
                      help "apply tfce preprocessing to data"
        , spatioTemporal = False &= explicit &= name "spatio-temporal" &=
