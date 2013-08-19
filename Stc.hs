@@ -1,17 +1,18 @@
 module Fastpermt.Stc(Stc(..), readStc, writeStc, truncateTime) where
 
+import Foreign.C
 import Control.Monad
 import Data.Binary
 import Fastpermt.Util
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Vector.Storable as V
 
-data Stc = Stc { tmin :: Float
-               , tstep :: Float
+data Stc = Stc { tmin :: CFloat
+               , tstep :: CFloat
                , n_vertices :: Int
                , n_times :: Int
                , stc_vertices :: [Int]
-               , stc_data :: V.Vector Float
+               , stc_data :: V.Vector CFloat
                } deriving (Show)
 
 readStc :: FilePath -> IO Stc
@@ -37,7 +38,7 @@ instance Binary Stc where
     putInt32be nTimes
     V.mapM_ putFloat32be values
 
-truncateTime :: Maybe Float -> Maybe Float -> Stc -> Stc
+truncateTime :: Maybe CFloat -> Maybe CFloat -> Stc -> Stc
 truncateTime Nothing to stc@Stc { tmin = tm } = truncateTime (Just tm) to stc
 truncateTime from Nothing stc@Stc { tmin = tm, tstep = step, n_times = nt } =
   truncateTime from (Just $ tm + step * fromIntegral (nt-1)) stc

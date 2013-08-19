@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Fastpermt.Config (confModes, Config(..), ClusterConf(..), emptyCC) where
 
+import Foreign.C
 import Fastpermt.Graph
 import System.Console.CmdArgs
 
@@ -75,7 +76,7 @@ confModes =
   versionArg [ignore]
 
 data ClusterConf =
-  ClusterConf { thresh :: Float
+  ClusterConf { thresh :: CFloat
               , graph :: Graph
               , nVerts :: Int
               , nTimes :: Int

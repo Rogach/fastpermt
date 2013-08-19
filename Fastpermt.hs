@@ -14,6 +14,7 @@ import Fastpermt.Util
 import System.Console.CmdArgs
 import System.Random (mkStdGen, randoms)
 import Text.Printf
+import Foreign.C
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Vector.Storable as V
 
@@ -22,15 +23,18 @@ main = do
   config <- cmdArgs confModes
   reject <- maybe (return id) (fmap applyIgnoreLabel . readLabel) (ignoreLabelFile config)
   mesh <- maybe (return emptyGraph) readGraph (graphFile config)
+  let timeMin = fmap realToFrac $ tMin config :: Maybe CFloat
+      timeMax = fmap realToFrac $ tMax config :: Maybe CFloat
   case config of
     conf@Conf{} -> do
       -- load stc files for both conditions
       [a, b] <- fmap (transpose . grouped 2) $
-                mapM (fmap (reject . truncateTime (tMin conf) (tMax conf)) . readStc) (stcs conf)
+                mapM (fmap (reject . truncateTime timeMin timeMax) . readStc) (stcs conf)
 
       -- select permutation method
       let cc = convertGraph (spatioTemporal conf) $
-               ClusterConf { thresh = fromMaybe (p2t (length a) 0.05) (clusterThreshold conf)
+               ClusterConf { thresh = fromMaybe (p2t (length a) 0.05) $
+                                      fmap realToFrac $ clusterThreshold conf
                            , graph = mesh
                            , nVerts = n_vertices $ head a
                            , nTimes = n_times $ head a
@@ -40,14 +44,14 @@ main = do
       -- meat of the algo
       let g = mkStdGen 5582031 -- pre-generated random seed, to ensure stable results
           pm = grouped (length a) $ take (length a * count conf) (randoms g :: [Bool])
-          op as bs = apply meth (vectorTTest as bs)
+          op as bs = apply meth (fastTTest as bs)
           distribution = applyPermutation op pm (map stc_data a) (map stc_data b)
           cutoff = sort distribution !! floor (fromIntegral (length distribution) * (0.95::Double))
-          origSpm = vectorTTest (map stc_data a) (map stc_data b)
+          origSpm = fastTTest (map stc_data a) (map stc_data b)
           corrSpm = threshold meth cutoff origSpm
           outStc = (head a) { stc_data = corrSpm }
 
-      forM_ (zip3 [(1::Int)..] distribution pm) $ \(i, v, r) ->
+      forM_ (zip3 [(1::Int)..] (map realToFrac distribution :: [Float]) pm) $ \(i, v, r) ->
          printf "%05d: %7.2f (%s)\n" i v (map (\f -> if f then '-' else '/') r)
 
       putStrLn ("thresh: " ++ show cutoff)
@@ -56,8 +60,8 @@ main = do
       BS.writeFile (outputFile conf) (writeStc outStc)
 
     conf@GetClusters{} -> do
-      stc <- fmap (reject . truncateTime (tMin conf) (tMax conf)) $ readStc $ gcStc conf
-      let cc = ClusterConf { thresh = fromMaybe 0 (clusterThreshold conf)
+      stc <- fmap (reject . truncateTime timeMin timeMax) $ readStc $ gcStc conf
+      let cc = ClusterConf { thresh = fromMaybe 0 (fmap realToFrac $ clusterThreshold conf)
                            , graph = mesh
                            , nVerts = n_vertices stc
                            , nTimes = n_times stc

@@ -12,6 +12,7 @@ module Fastpermt.Methods ( Method(..)
                          , onVertices
                          ) where
 
+import Foreign.C
 import Fastpermt.Cluster
 import Fastpermt.Config
 import Fastpermt.Graph
@@ -19,10 +20,10 @@ import Fastpermt.Util (onVertices)
 import qualified Data.Vector.Storable as V
 
 class Method a where
-  apply :: a -> V.Vector Float -> Float
-  threshold :: a -> Float -> V.Vector Float -> V.Vector Float
+  apply :: a -> V.Vector CFloat -> CFloat
+  threshold :: a -> CFloat -> V.Vector CFloat -> V.Vector CFloat
 
-data ModifiedMethod m = ModifiedMethod (V.Vector Float -> V.Vector Float) m
+data ModifiedMethod m = ModifiedMethod (V.Vector CFloat -> V.Vector CFloat) m
 instance Method m => Method (ModifiedMethod m) where
   apply (ModifiedMethod modify meth) = apply meth . modify
   threshold (ModifiedMethod modify meth) th = threshold meth th . modify

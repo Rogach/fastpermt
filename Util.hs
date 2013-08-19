@@ -1,5 +1,6 @@
 module Fastpermt.Util where
 
+import Foreign.C
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.Put
@@ -10,18 +11,18 @@ import Unsafe.Coerce
 import qualified Data.Vector.Storable as V
 import qualified Data.Map as M
 
-onVertices :: ClusterConf -> (V.Vector Float -> a) -> V.Vector Float -> [a]
+onVertices :: ClusterConf -> (V.Vector CFloat -> a) -> V.Vector CFloat -> [a]
 onVertices conf op vals =
   map (\t -> op $ V.slice (t * nVerts conf) (nVerts conf) vals) [0..nTimes conf-1]
 
 -- helpers for 32bit big-endian io
 getInt32be :: Get Int
 getInt32be = fmap unsafeCoerce getWord32be
-getFloat32be :: Get Float
+getFloat32be :: Get CFloat
 getFloat32be = fmap unsafeCoerce getWord32be
 putInt32be :: Int -> Put
 putInt32be i = putWord32be (unsafeCoerce i)
-putFloat32be :: Float -> Put
+putFloat32be :: CFloat -> Put
 putFloat32be f = putWord32be (unsafeCoerce f)
 
 grouped :: Int -> [a] -> [[a]]
