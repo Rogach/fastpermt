@@ -6,7 +6,7 @@ run: compile
 compile: target target/ttest.o
 	ghc ${GHC_OPTS} *.hs target/ttest.o
 
-compile-static: clean target ttest.o
+compile-static: clean target target/ttest.o
 	ghc ${GHC_OPTS} -optl-static -optl-pthread *.hs target/ttest.o
 
 send: compile-static
