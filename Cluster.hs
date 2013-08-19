@@ -2,14 +2,14 @@ module Fastpermt.Cluster where
 
 import Fastpermt.Graph
 import qualified Data.Set as S
-import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Storable as V
 
-applyClusters :: (Floating f, V.Unbox f) => V.Vector f -> [[Int]] -> V.Vector f
+applyClusters :: (Floating f, V.Storable f) => V.Vector f -> [[Int]] -> V.Vector f
 applyClusters arr = foldl (\narr cs -> narr V.// map (\i -> (i, 1)) cs) (V.replicate (V.length arr) 0)
 
 -- | Find all clusters in a vector, according to given test
 -- | Returns lists of indices
-clusters :: (Floating f, V.Unbox f) => Graph -> (f -> Bool) -> V.Vector f -> [[Int]]
+clusters :: (Floating f, V.Storable f) => Graph -> (f -> Bool) -> V.Vector f -> [[Int]]
 clusters graph test larr = clusters' larr S.empty 0
   where clusters' arr visited n
           | n >= V.length arr = []
@@ -23,7 +23,7 @@ clusters graph test larr = clusters' larr S.empty 0
             in ns : clusters' arr newVisited (n+1)
           | otherwise = clusters' arr visited (n+1)
 
-clusterThinning :: (Floating f, V.Unbox f) => Graph -> (f -> Bool) -> V.Vector f -> V.Vector f
+clusterThinning :: (Floating f, V.Storable f) => Graph -> (f -> Bool) -> V.Vector f -> V.Vector f
 clusterThinning graph test larr =
   let shrink arr = V.imap (\i v ->
                             if test v && all test (map (arr V.!) (grlookup graph i))
@@ -33,7 +33,7 @@ clusterThinning graph test larr =
                             then larr V.! i else 0) arr
   in expand $ shrink larr
 
-tfce :: (Ord f, Enum f, Floating f, V.Unbox f) => Graph -> V.Vector f -> V.Vector f
+tfce :: (Ord f, Enum f, Floating f, V.Storable f) => Graph -> V.Vector f -> V.Vector f
 tfce graph larr =
   let max = V.maximum larr
       delta = max/50

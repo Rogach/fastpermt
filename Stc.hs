@@ -4,7 +4,7 @@ import Control.Monad
 import Data.Binary
 import Fastpermt.Util
 import qualified Data.ByteString.Lazy as BS
-import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Storable as V
 
 data Stc = Stc { tmin :: Float
                , tstep :: Float

@@ -15,7 +15,7 @@ import System.Console.CmdArgs
 import System.Random (mkStdGen, randoms)
 import Text.Printf
 import qualified Data.ByteString.Lazy as BS
-import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Storable as V
 
 main :: IO ()
 main = do

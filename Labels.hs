@@ -1,6 +1,6 @@
 module Fastpermt.Labels(MneLabel(..), readLabel, applyIgnoreLabel) where
 
-import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Storable as V
 import Fastpermt.Config (emptyCC, nVerts, nTimes)
 import Fastpermt.Util
 import Fastpermt.Stc

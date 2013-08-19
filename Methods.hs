@@ -16,7 +16,7 @@ import Fastpermt.Cluster
 import Fastpermt.Config
 import Fastpermt.Graph
 import Fastpermt.Util (onVertices)
-import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Storable as V
 
 class Method a where
   apply :: a -> V.Vector Float -> Float

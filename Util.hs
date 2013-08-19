@@ -7,7 +7,7 @@ import Debug.Trace
 import Fastpermt.Config
 import Fastpermt.Graph
 import Unsafe.Coerce
-import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Storable as V
 import qualified Data.Map as M
 
 onVertices :: ClusterConf -> (V.Vector Float -> a) -> V.Vector Float -> [a]
