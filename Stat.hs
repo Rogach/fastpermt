@@ -2,7 +2,7 @@
 module Fastpermt.Stat (vectorTTest, t2p, p2t, fastTTest) where
 
 import System.IO.Unsafe
-import Foreign (withArray, newForeignPtr_, Ptr)
+import Foreign (withArray, newForeignPtr, finalizerFree, Ptr)
 import Foreign.C
 import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Statistics.Distribution
@@ -34,5 +34,5 @@ fastTTest xs ys = unsafePerformIO $ do
   withArray (map (unsafeForeignPtrToPtr . fst . V.unsafeToForeignPtr0) xs) $ \xsp -> do
     withArray (map (unsafeForeignPtrToPtr . fst . V.unsafeToForeignPtr0) ys) $ \ysp -> do
       res <- fast_ttest xsp ysp (fromIntegral n) (fromIntegral (length xs))
-      p <- newForeignPtr_ res
+      p <- newForeignPtr finalizerFree res
       return $ V.unsafeFromForeignPtr0 p n
