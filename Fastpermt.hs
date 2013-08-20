@@ -52,10 +52,10 @@ main = do
           outStc = (head a) { stc_data = corrSpm }
 
       forM_ (zip3 [(1::Int)..] (map realToFrac distribution :: [Float]) pm) $ \(i, v, r) ->
-         printf "%05d: %7.2f (%s)\n" i v (map (\f -> if f then '-' else '/') r)
+         printf "%05d: %9.4f (%s)\n" i v (map (\f -> if f then '-' else '/') r)
 
       putStrLn ("thresh: " ++ show cutoff)
-      putStrLn ("orig: " ++ show (apply meth (vectorTTest (map stc_data a) (map stc_data b))))
+      putStrLn ("orig: " ++ show (apply meth (fastTTest (map stc_data a) (map stc_data b))))
 
       BS.writeFile (outputFile conf) (writeStc outStc)
 
@@ -85,7 +85,7 @@ getMethod conf cc =
         "maxmass" -> AnyMethod $ MaxClusterMass cc
         _ -> undefined
       thin' = if thinClusters conf then AnyMethod . modClusterThinning cc else id
-      tfce' = if applyTFCE conf then AnyMethod . modTFCE (graph cc) else id
+      tfce' = if applyTFCE conf then AnyMethod . modTFCE (toCGraph $ graph cc) else id
   in AnyMethod $ modFiltNaN $ modAbs $ tfce' $ thin' meth
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]

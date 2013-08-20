@@ -25,7 +25,7 @@ t2p dg t = realToFrac $ (1 - cumulative (studentT $ fromIntegral dg) (realToFrac
 p2t :: Int -> CFloat -> CFloat
 p2t dg p = realToFrac $ quantile (studentT $ fromIntegral dg) (1 - realToFrac p / 2)
 
-foreign import ccall unsafe "fast_ttest" fast_ttest
+foreign import ccall "fast_ttest" fast_ttest
   :: Ptr (Ptr CFloat) -> Ptr (Ptr CFloat) -> CInt -> CInt -> IO (Ptr CFloat)
 
 fastTTest :: [V.Vector CFloat] -> [V.Vector CFloat] -> V.Vector CFloat

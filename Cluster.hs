@@ -1,5 +1,10 @@
+{-# LANGUAGE ForeignFunctionInterface #-}
 module Fastpermt.Cluster where
 
+import System.IO.Unsafe
+import Foreign (newForeignPtr, finalizerFree, touchForeignPtr, Ptr)
+import Foreign.C
+import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Fastpermt.Graph
 import qualified Data.Set as S
 import qualified Data.Vector.Storable as V
@@ -32,6 +37,18 @@ clusterThinning graph test larr =
                             if test v || any test (map (arr V.!) (grlookup graph i))
                             then larr V.! i else 0) arr
   in expand $ shrink larr
+
+fastTfce :: CGraph -> V.Vector CFloat -> V.Vector CFloat
+fastTfce graph arr = unsafePerformIO $ do
+  let n = V.length arr
+      arrP = fst $ V.unsafeToForeignPtr0 arr
+  res <- fast_tfce (fromIntegral n) (unsafeForeignPtrToPtr $ arrP) graph
+  p <- newForeignPtr finalizerFree res
+  touchForeignPtr arrP -- ensure that haskell doesn't garbage collect the data while we are computing
+  return $ V.unsafeFromForeignPtr0 p n
+
+foreign import ccall "fast_tfce" fast_tfce
+  :: CInt -> Ptr CFloat -> CGraph -> IO (Ptr CFloat)
 
 tfce :: (Ord f, Enum f, Floating f, V.Storable f) => Graph -> V.Vector f -> V.Vector f
 tfce graph larr =

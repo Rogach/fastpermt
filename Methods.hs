@@ -76,5 +76,5 @@ modClusterThinning :: Method m => ClusterConf -> m -> ModifiedMethod m
 modClusterThinning conf =
   ModifiedMethod (clusterThinning (graph conf) (> thresh conf))
 
-modTFCE :: Method m => Graph -> m -> ModifiedMethod m
-modTFCE graph = ModifiedMethod (tfce graph)
+modTFCE :: Method m => CGraph -> m -> ModifiedMethod m
+modTFCE graph = ModifiedMethod (fastTfce graph)
