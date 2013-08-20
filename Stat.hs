@@ -31,6 +31,8 @@ foreign import ccall "fast_ttest" fast_ttest
 fastTTest :: [V.Vector CFloat] -> [V.Vector CFloat] -> V.Vector CFloat
 fastTTest xs ys = unsafePerformIO $ do
   let n = V.length $ head xs
+  -- we can safely forget about `unsafeForeignPtrToPtr` here,
+  -- because reference to data is kept in main code
   withArray (map (unsafeForeignPtrToPtr . fst . V.unsafeToForeignPtr0) xs) $ \xsp -> do
     withArray (map (unsafeForeignPtrToPtr . fst . V.unsafeToForeignPtr0) ys) $ \ysp -> do
       res <- fast_ttest xsp ysp (fromIntegral n) (fromIntegral (length xs))
