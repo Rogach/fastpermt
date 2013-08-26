@@ -42,8 +42,9 @@ truncateTime :: Maybe CFloat -> Maybe CFloat -> Stc -> Stc
 truncateTime Nothing to stc@Stc { tmin = tm } = truncateTime (Just tm) to stc
 truncateTime from Nothing stc@Stc { tmin = tm, tstep = step, n_times = nt } =
   truncateTime from (Just $ tm + step * fromIntegral (nt-1)) stc
-truncateTime (Just from) (Just to) stc@Stc { tmin = tm, tstep = step, n_vertices = nv } =
-  let (before, after) = span (<from) [tm,(tm+step)..]
+truncateTime (Just from) (Just to) stc@Stc { tmin = tm, tstep = step, n_vertices = nv, n_times = nt } =
+  let tmax = tm + step * fromIntegral (nt - 1)
+      (before, after) = span (<from) [tm,(tm+step)..tmax]
       (inside, _) = span (<=to) after
   in stc { tmin = head after
          , n_times = length inside
