@@ -80,6 +80,7 @@ getMethod :: Config -> ClusterConf -> AnyMethod
 getMethod conf cc =
   let meth = case method conf of
         "id" -> AnyMethod IdMethod
+        "sum" -> AnyMethod SumMethod
         "maxt" -> AnyMethod MaxThreshold
         "maxclust" -> AnyMethod $ MaxClusterSize cc
         "maxmass" -> AnyMethod $ MaxClusterMass cc

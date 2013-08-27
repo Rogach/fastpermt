@@ -1,6 +1,7 @@
 {-# LANGUAGE ExistentialQuantification, NamedFieldPuns #-}
 module Fastpermt.Methods ( Method(..)
                          , IdMethod(..)
+                         , SumMethod(..)
                          , MaxThreshold(..)
                          , MaxClusterSize(..)
                          , MaxClusterMass(..)
@@ -37,6 +38,13 @@ instance Method AnyMethod where
 data IdMethod = IdMethod deriving (Eq, Show)
 instance Method IdMethod where
   apply _ _ = 0
+  threshold _ _ = id
+
+-- simple method, that sums all values in input array to get threshold
+-- useful for testing
+data SumMethod = SumMethod deriving (Eq, Show)
+instance Method SumMethod where
+  apply _ = V.sum
   threshold _ _ = id
 
 data MaxThreshold = MaxThreshold deriving (Eq, Show)
