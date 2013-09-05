@@ -31,7 +31,6 @@ main = do
       [a, b] <- fmap (transpose . grouped 2) $
                 mapM (fmap (reject . truncateTime timeMin timeMax) . readStc) (stcs conf)
 
-      -- select permutation method
       let cc = convertGraph (spatioTemporal conf) $
                ClusterConf { thresh = fromMaybe (p2t (length a) 0.05) $
                                       fmap realToFrac $ clusterThreshold conf
@@ -39,6 +38,7 @@ main = do
                            , nVerts = n_vertices $ head a
                            , nTimes = n_times $ head a
                            }
+          -- select permutation method
           meth = getMethod conf cc
 
       -- meat of the algo
