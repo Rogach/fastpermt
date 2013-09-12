@@ -52,26 +52,26 @@ instance Method MaxThreshold where
   apply _ = V.maximum
   threshold _ th = V.map (\v -> if v > th then v else 0)
 
-data MaxClusterSize = MaxClusterSize ClusterConf deriving (Show)
+data MaxClusterSize = MaxClusterSize ClusterConf
 instance Method MaxClusterSize where
   apply (MaxClusterSize conf) values =
-    let cs = clusters (graph conf) (> thresh conf) values
+    let cs = clusters (graph conf) (test conf) values
     in if null cs
        then 0
        else fromIntegral $ maximum $ map length cs
   threshold (MaxClusterSize conf) th values =
-    let fcs = filter ((>= th) . fromIntegral . length) . clusters (graph conf) (> thresh conf)
+    let fcs = filter ((>= th) . fromIntegral . length) . clusters (graph conf) (test conf)
     in applyClusters values (fcs values)
 
-data MaxClusterMass = MaxClusterMass ClusterConf deriving (Show)
+data MaxClusterMass = MaxClusterMass ClusterConf
 instance Method MaxClusterMass where
   apply (MaxClusterMass conf) values =
-    let cs = clusters (graph conf) (> thresh conf) values
+    let cs = clusters (graph conf) (test conf) values
     in if null cs
        then 0
        else maximum $ map (sum . map (\c -> values V.! c)) cs
   threshold (MaxClusterMass conf) th values =
-    let fcs = filter ((>= th) . sum . map (\c -> values V.! c)) . clusters (graph conf) (> thresh conf)
+    let fcs = filter ((>= th) . sum . map (\c -> values V.! c)) . clusters (graph conf) (test conf)
     in applyClusters values (fcs values)
 
 modAbs :: Method m => m -> ModifiedMethod m
@@ -82,7 +82,7 @@ modFiltNaN = ModifiedMethod (V.map (\v -> if v /= v then 0 else v))
 
 modClusterThinning :: Method m => ClusterConf -> m -> ModifiedMethod m
 modClusterThinning conf =
-  ModifiedMethod (clusterThinning (graph conf) (> thresh conf))
+  ModifiedMethod (clusterThinning (graph conf) (test conf))
 
 modTFCE :: Method m => CGraph -> m -> ModifiedMethod m
 modTFCE graph = ModifiedMethod (fastTfce graph)

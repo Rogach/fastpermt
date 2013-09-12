@@ -32,8 +32,8 @@ main = do
                 mapM (fmap (reject . truncateTime timeMin timeMax) . readStc) (stcs conf)
 
       let cc = convertGraph (spatioTemporal conf) $
-               ClusterConf { thresh = fromMaybe (p2t (length a) 0.05) $
-                                      fmap realToFrac $ clusterThreshold conf
+               ClusterConf { test = (> (fromMaybe (p2t (length a) 0.05) $
+                                        fmap realToFrac $ clusterThreshold conf))
                            , graph = mesh
                            , nVerts = n_vertices $ head a
                            , nTimes = n_times $ head a
@@ -61,12 +61,12 @@ main = do
 
     conf@GetClusters{} -> do
       stc <- fmap (reject . truncateTime timeMin timeMax) $ readStc $ gcStc conf
-      let cc = ClusterConf { thresh = fromMaybe 0 (fmap realToFrac $ clusterThreshold conf)
+      let cc = ClusterConf { test = (> (fromMaybe 0 (fmap realToFrac $ clusterThreshold conf)))
                            , graph = mesh
                            , nVerts = n_vertices stc
                            , nTimes = n_times stc
                            }
-          gc = filter ((> gcMinClusterSize conf) . length) . clusters mesh (> thresh cc)
+          gc = filter ((> gcMinClusterSize conf) . length) . clusters mesh (test cc)
           clsts = onVertices cc (gc . V.map abs) (stc_data stc)
           times = [(round $ tmin stc),(round $ tmin stc + tstep stc)..] :: [Int]
       if shortFormat conf

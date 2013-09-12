@@ -76,11 +76,11 @@ confModes =
   versionArg [ignore]
 
 data ClusterConf =
-  ClusterConf { thresh :: CFloat
+  ClusterConf { test :: CFloat -> Bool
               , graph :: Graph
               , nVerts :: Int
               , nTimes :: Int
-              } deriving Show
+              }
 
 emptyCC :: ClusterConf
-emptyCC = ClusterConf 0 emptyGraph 0 0
+emptyCC = ClusterConf (\_ -> True) emptyGraph 0 0
