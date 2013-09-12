@@ -14,7 +14,7 @@ extern "C" {
     float max = 0;
     for (int q = 0; q < inpc; q++)
       if (inp[q] > max)
-        max = inp[q];
+        max = abs(inp[q]);
 
     float delta = max / 50;
 
@@ -28,13 +28,13 @@ extern "C" {
       std::vector<int> current_cluster;
 
       for (int q = 0; q < inpc; q++) {
-        if (!visited[q] && inp[q] > t) {
+        if (!visited[q] && abs(inp[q]) > t) {
           std::queue<int> queue;
           queue.push(q);
           while (!queue.empty()) {
             int n = queue.front();
             queue.pop();
-            if (!visited[n] && inp[n] > t) {
+            if (!visited[n] && abs(inp[n]) > t) {
               current_cluster.push_back(n);
               std::vector<int> neighbors = (*gr)[n];
               for (uint i = 0; i < neighbors.size(); i++) {
@@ -52,6 +52,9 @@ extern "C" {
       }
       for (int q = 0; q < inpc; q++) visited[q] = false;
     }
+
+    for (int q = 0; q < inpc; q++)
+      result[q] = inp[q] >= 0 ? result[q] : -result[q];
 
     free(visited);
     return result;

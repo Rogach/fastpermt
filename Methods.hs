@@ -47,10 +47,18 @@ instance Method SumMethod where
   apply _ = V.sum
   threshold _ _ = id
 
-data MaxThreshold = MaxThreshold deriving (Eq, Show)
+data MaxThreshold = MaxThreshold ClusterConf
 instance Method MaxThreshold where
-  apply _ = V.maximum
-  threshold _ th = V.map (\v -> if v > th then v else 0)
+  apply (MaxThreshold conf) values =
+    case dir conf of
+      Both -> V.maximum values
+      Positive -> V.maximum values
+      Negative -> V.minimum values
+  threshold (MaxThreshold conf) th values =
+    case dir conf of
+      Both -> V.map (\v -> if v > th then v else 0) values
+      Positive -> V.map (\v -> if v > th then v else 0) values
+      Negative -> V.map (\v -> if v < th then v else 0) values
 
 data MaxClusterSize = MaxClusterSize ClusterConf
 instance Method MaxClusterSize where
@@ -69,9 +77,9 @@ instance Method MaxClusterMass where
     let cs = clusters (graph conf) (test conf) values
     in if null cs
        then 0
-       else maximum $ map (sum . map (\c -> values V.! c)) cs
+       else maximum $ map (abs . sum . map (\c -> values V.! c)) cs
   threshold (MaxClusterMass conf) th values =
-    let fcs = filter ((>= th) . sum . map (\c -> values V.! c)) . clusters (graph conf) (test conf)
+    let fcs = filter ((>= th) . abs . sum . map (\c -> values V.! c)) . clusters (graph conf) (test conf)
     in applyClusters values (fcs values)
 
 modAbs :: Method m => m -> ModifiedMethod m

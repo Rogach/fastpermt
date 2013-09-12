@@ -1,14 +1,17 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Fastpermt.Config (confModes, Config(..), ClusterConf(..), emptyCC) where
+module Fastpermt.Config (confModes, Config(..), ClusterConf(..), emptyCC, ThresholdDir(..)) where
 
 import Foreign.C
 import Fastpermt.Graph
 import System.Console.CmdArgs
 
+data ThresholdDir = Positive | Negative | Both deriving (Data, Typeable, Show, Eq)
+
 data Config = Conf { method :: String
                    , stcs :: [FilePath]
                    , count :: Int
                    , clusterThreshold :: Maybe Float
+                   , clusterThresholdDir :: ThresholdDir
                    , graphFile :: Maybe FilePath
                    , thinClusters :: Bool
                    , applyTFCE :: Bool
@@ -36,6 +39,8 @@ defConf =
        , count = 1000 &= help "number of permutations"
        , clusterThreshold = Nothing &= explicit &= name "cluster-threshold" &= name "t" &=
                             help "voxel value cut-off threshold"
+       , clusterThresholdDir = Both &= explicit &= name "cluster-threshold-dir" &= name "d" &= typ "DIR" &=
+                               help "direction of voxel value cut-off threshold - accept positive, negative, or both"
        , graphFile = Nothing &= typFile &= explicit &= name "graph-file" &= name "g" &=
                      help "graph file for cluster algorithms"
        , thinClusters = False &= explicit &= name "thin-clusters" &=
@@ -77,10 +82,11 @@ confModes =
 
 data ClusterConf =
   ClusterConf { test :: CFloat -> Bool
+              , dir :: ThresholdDir
               , graph :: Graph
               , nVerts :: Int
               , nTimes :: Int
               }
 
 emptyCC :: ClusterConf
-emptyCC = ClusterConf (\_ -> True) emptyGraph 0 0
+emptyCC = ClusterConf (\_ -> True) Both emptyGraph 0 0

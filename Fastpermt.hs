@@ -31,9 +31,14 @@ main = do
       [a, b] <- fmap (transpose . grouped 2) $
                 mapM (fmap (reject . truncateTime timeMin timeMax) . readStc) (stcs conf)
 
-      let cc = convertGraph (spatioTemporal conf) $
-               ClusterConf { test = (> (fromMaybe (p2t (length a) 0.05) $
-                                        fmap realToFrac $ clusterThreshold conf))
+      let thresh = fromMaybe (p2t (length a) 0.05) $
+                   fmap realToFrac $ clusterThreshold conf
+          cc = convertGraph (spatioTemporal conf) $
+               ClusterConf { test = case clusterThresholdDir conf of
+                                Positive -> (> thresh)
+                                Negative -> (< thresh)
+                                Both -> (> thresh)
+                           , dir = clusterThresholdDir conf
                            , graph = mesh
                            , nVerts = n_vertices $ head a
                            , nTimes = n_times $ head a
@@ -62,6 +67,7 @@ main = do
     conf@GetClusters{} -> do
       stc <- fmap (reject . truncateTime timeMin timeMax) $ readStc $ gcStc conf
       let cc = ClusterConf { test = (> (fromMaybe 0 (fmap realToFrac $ clusterThreshold conf)))
+                           , dir = Both
                            , graph = mesh
                            , nVerts = n_vertices stc
                            , nTimes = n_times stc
@@ -81,13 +87,14 @@ getMethod conf cc =
   let meth = case method conf of
         "id" -> AnyMethod IdMethod
         "sum" -> AnyMethod SumMethod
-        "maxt" -> AnyMethod MaxThreshold
+        "maxt" -> AnyMethod $ MaxThreshold cc
         "maxclust" -> AnyMethod $ MaxClusterSize cc
         "maxmass" -> AnyMethod $ MaxClusterMass cc
         _ -> undefined
       thin' = if thinClusters conf then AnyMethod . modClusterThinning cc else id
       tfce' = if applyTFCE conf then AnyMethod . modTFCE (toCGraph $ graph cc) else id
-  in AnyMethod $ modFiltNaN $ modAbs $ tfce' $ thin' meth
+      modAbs' = if clusterThresholdDir conf == Both then AnyMethod . modAbs else id
+  in AnyMethod $ modFiltNaN $ modAbs' $ tfce' $ thin' meth
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
 applyPermutation _ [] _ _ = []
