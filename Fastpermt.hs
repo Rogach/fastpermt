@@ -36,7 +36,7 @@ main = do
           cc = convertGraph (spatioTemporal conf) $
                ClusterConf { test = case clusterThresholdDir conf of
                                 Positive -> (> thresh)
-                                Negative -> (< thresh)
+                                Negative -> (< (-thresh))
                                 Both -> (> thresh)
                            , dir = clusterThresholdDir conf
                            , graph = mesh
