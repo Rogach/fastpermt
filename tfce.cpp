@@ -30,7 +30,7 @@ extern "C" {
       }
     }
 
-    float min = std::min_element(inp, inp+inpc);
+    float min = *std::min_element(inp, inp+inpc);
     float negDelta = min / 50;
 
     for (float t = negDelta/2; t > min; t += negDelta) {
