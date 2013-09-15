@@ -94,7 +94,7 @@ getMethod conf cc =
       thin' = if thinClusters conf then AnyMethod . modClusterThinning cc else id
       tfce' = if applyTFCE conf then AnyMethod . modTFCE (toCGraph $ graph cc) else id
       modAbs' = if clusterThresholdDir conf == Both then AnyMethod . modAbs else id
-  in AnyMethod $ modFiltNaN $ modAbs' $ tfce' $ thin' meth
+  in AnyMethod $ modFiltNaN $ tfce' $ modAbs' $ thin' meth
 
 applyPermutation :: Floating f => ([a] -> [a] -> f) -> [[Bool]] -> [a] -> [a] -> [f]
 applyPermutation _ [] _ _ = []
