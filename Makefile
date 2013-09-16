@@ -1,7 +1,7 @@
 GHC_OPTS := -O3 -Wall -o fastpermt -hidir target/ -odir target/ -fno-warn-name-shadowing -main-is Fastpermt -lstdc++
 
 run: compile
-	bash -c '/usr/bin/time -f "\nelapsed: %es\nrss: %Mk" ./fastpermt run --method maxt --tfce --graph-file aux/graph -c 20 --ignore-label aux/ft_ignore-lh.label $$(ls data/ | cut -f1,2 -d_ | uniq | xargs -I{} echo data/{}_45_control-lh.stc data/{}_45_kanizsa-lh.stc) -o aux/result.stc'
+	bash -c '/usr/bin/time -f "\nelapsed: %es\nrss: %Mk" ./fastpermt run --method maxt --tfce -d neg --graph-file aux/graph -c 20 --ignore-label aux/ft2_ignore-lh.label $$(ls data/ | cut -f1,2 -d_ | uniq | xargs -I{} echo data/{}_pas_45_kanizsa-lh.stc data/{}_pas_45_control-lh.stc) -o aux/result.stc'
 
 compile: target target/ttest.o target/graph.o target/tfce.o
 	ghc ${GHC_OPTS} *.hs target/ttest.o target/graph.o target/tfce.o

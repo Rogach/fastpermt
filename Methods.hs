@@ -53,12 +53,12 @@ instance Method MaxThreshold where
     case dir conf of
       Both -> V.maximum values
       Positive -> V.maximum values
-      Negative -> V.minimum values
+      Negative -> - V.minimum values
   threshold (MaxThreshold conf) th values =
     case dir conf of
-      Both -> V.map (\v -> if v > th then v else 0) values
-      Positive -> V.map (\v -> if v > th then v else 0) values
-      Negative -> V.map (\v -> if v < th then v else 0) values
+      Both -> V.map (\v -> if v > th then 1 else 0) values
+      Positive -> V.map (\v -> if v > th then 1 else 0) values
+      Negative -> V.map (\v -> if v < (-th) then 1 else 0) values
 
 data MaxClusterSize = MaxClusterSize ClusterConf
 instance Method MaxClusterSize where
