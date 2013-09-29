@@ -12,6 +12,7 @@ data Config = Conf { method :: String
                    , count :: Int
                    , clusterThreshold :: Maybe Float
                    , clusterThresholdDir :: ThresholdDir
+                   , pValue :: Float
                    , graphFile :: Maybe FilePath
                    , thinClusters :: Bool
                    , applyTFCE :: Bool
@@ -41,6 +42,8 @@ defConf =
                             help "voxel value cut-off threshold"
        , clusterThresholdDir = Both &= explicit &= name "cluster-threshold-dir" &= name "d" &= typ "DIR" &=
                                help "direction of voxel value cut-off threshold - accept positive, negative, or both"
+       , pValue = 0.05 &= typ "FLOAT" &= explicit &= name "p-value" &= name "p" &=
+                  help "p-value at which we should reject the null hypothesis"
        , graphFile = Nothing &= typFile &= explicit &= name "graph-file" &= name "g" &=
                      help "graph file for cluster algorithms"
        , thinClusters = False &= explicit &= name "thin-clusters" &=

@@ -51,7 +51,7 @@ main = do
           pm = grouped (length a) $ take (length a * count conf) (randoms g :: [Bool])
           op as bs = apply meth (fastTTest as bs)
           distribution = applyPermutation op pm (map stc_data a) (map stc_data b)
-          cutoff = sort distribution !! floor (fromIntegral (length distribution) * (0.95::Double))
+          cutoff = sort distribution !! floor (fromIntegral (length distribution) * (1 - pValue config))
           origSpm = fastTTest (map stc_data a) (map stc_data b)
           corrSpm = threshold meth cutoff origSpm
           outStc = (head a) { stc_data = corrSpm }
