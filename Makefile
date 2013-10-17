@@ -10,7 +10,7 @@ compile-static: clean target target/ttest.o target/graph.o target/tfce.o
 	ghc ${GHC_OPTS} -optl-static -optl-pthread *.hs target/ttest.o target/graph.o target/tfce.o
 
 send: compile-static
-	install -m a+rwx fastpermt /media/meg/data/programs/platon/prj/permt/build/fastpermt
+	install -m a+rwx fastpermt /media/meg/data/programs/platon/prj/kanizsa/build/fastpermt
 
 clean:
 	rm -fr target/* fastpermt fastpermt.prof
